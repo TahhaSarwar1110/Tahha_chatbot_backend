@@ -5,3 +5,4 @@ langchain-community
 langchain-core
 python-dotenv
 uvicorn
+fastapi
