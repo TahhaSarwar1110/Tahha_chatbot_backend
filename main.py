@@ -90,6 +90,7 @@ class ChatRequest(BaseModel):
 # Define chatbot response template
 TEMPLATE = """
 The AI should completely understand the question and only answer strictly based on the provided document context.
+The AI should answer in detail.
 The AI should not talk about the document in the answer.
 The AI should not hallucinate.
 If the question does not have enough information, the AI should ask for more details. Example Question: I want to edit the shifts for the whole week. Response: I will be able to assist with further details.
