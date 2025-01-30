@@ -30,13 +30,13 @@ if not openai_api_key:
 # Initialize FastAPI
 app = FastAPI()
 
-# Enable CORS
+# Enable CORS to allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this to frontend URL in production
+    allow_origins=["*"],  # Allow all frontend origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Root Route (For Health Check)
@@ -48,27 +48,27 @@ def home():
 retriever = None  # Default to None in case of failure
 try:
     pdf_path = "User Query.pdf"
-    
+
     if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"❌ ERROR: '{pdf_path}' not found!")
+        print(f"⚠️ WARNING: '{pdf_path}' not found! Continuing without document retrieval.")
+    else:
+        page = PyPDFLoader(pdf_path)
+        my_document = page.load()
 
-    page = PyPDFLoader(pdf_path)
-    my_document = page.load()
+        character_splitter = CharacterTextSplitter(separator=".", chunk_size=500, chunk_overlap=50)
+        character_splitted_documents = character_splitter.split_documents(my_document)
 
-    character_splitter = CharacterTextSplitter(separator=".", chunk_size=500, chunk_overlap=50)
-    character_splitted_documents = character_splitter.split_documents(my_document)
+        for doc in character_splitted_documents:
+            doc.page_content = " ".join(doc.page_content.split())
 
-    for doc in character_splitted_documents:
-        doc.page_content = " ".join(doc.page_content.split())
-
-    # Initialize vector store and retriever
-    embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
-    vector_store = Chroma.from_documents(
-        embedding=embedding,
-        documents=character_splitted_documents,
-        persist_directory="./TCP_directory_1"
-    )
-    retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 3, "lambda_multi": 0.5})
+        # Initialize vector store and retriever
+        embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
+        vector_store = Chroma.from_documents(
+            embedding=embedding,
+            documents=character_splitted_documents,
+            persist_directory="./TCP_directory_1"
+        )
+        retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 3, "lambda_multi": 0.5})
 
 except Exception as e:
     print(f"❌ ERROR LOADING DOCUMENTS: {e}")
@@ -114,7 +114,7 @@ prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 @chain
 def memory_rag_chain(question):
     if retriever is None:
-        return "Error: Document retrieval system is not available."
+        return "⚠️ Error: Document retrieval system is not available."
 
     retrieved_docs = retriever.invoke(question)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
@@ -125,13 +125,13 @@ def memory_rag_chain(question):
         return response
 
     chain = (
-        RunnablePassthrough.assign(
-            message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
-            context=RunnablePassthrough()
-        )
-        | prompt_template
-        | chat
-        | StrOutputParser()
+            RunnablePassthrough.assign(
+                message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
+                context=RunnablePassthrough()
+            )
+            | prompt_template
+            | chat
+            | StrOutputParser()
     )
 
     response = chain.invoke({"question": question, "context": context})
@@ -151,5 +151,6 @@ async def chat_endpoint(request: ChatRequest):
 # Run FastAPI server
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.getenv("PORT", 8000))  # Use Render's assigned PORT
     uvicorn.run(app, host="0.0.0.0", port=port)
