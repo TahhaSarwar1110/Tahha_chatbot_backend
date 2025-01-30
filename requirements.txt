@@ -6,3 +6,4 @@ langchain-core
 python-dotenv
 uvicorn
 fastapi
+chromadb
