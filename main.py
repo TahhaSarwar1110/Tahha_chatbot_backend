@@ -19,10 +19,13 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-import os
 
 # Load environment variables
+load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
+
+if not openai_api_key:
+    raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing. Add it in Render's Environment Variables.")
 
 # Initialize FastAPI
 app = FastAPI()
@@ -36,16 +39,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Root Route (For Health Check)
+@app.get("/")
+def home():
+    return {"message": "FastAPI Chatbot is running successfully!"}
+
 # Load and process document
+retriever = None  # Default to None in case of failure
 try:
-    page = PyPDFLoader("User Query.pdf")
+    pdf_path = "User Query.pdf"
+    
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"❌ ERROR: '{pdf_path}' not found!")
+
+    page = PyPDFLoader(pdf_path)
     my_document = page.load()
 
     character_splitter = CharacterTextSplitter(separator=".", chunk_size=500, chunk_overlap=50)
     character_splitted_documents = character_splitter.split_documents(my_document)
 
-    for i in range(len(character_splitted_documents)):
-        character_splitted_documents[i].page_content = " ".join(character_splitted_documents[i].page_content.split())
+    for doc in character_splitted_documents:
+        doc.page_content = " ".join(doc.page_content.split())
 
     # Initialize vector store and retriever
     embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
@@ -58,14 +72,13 @@ try:
 
 except Exception as e:
     print(f"❌ ERROR LOADING DOCUMENTS: {e}")
-    retriever = None  # Set to None if loading fails
 
 # Initialize chatbot memory
 chat = ChatOpenAI(
     model="gpt-4",
     temperature=0,
     max_tokens=250,
-    openai_api_key=os.getenv("OPENAI_API_KEY")
+    openai_api_key=openai_api_key
 )
 
 chat_memory = ConversationSummaryMemory(llm=chat, memory_key="message_log")
@@ -138,4 +151,5 @@ async def chat_endpoint(request: ChatRequest):
 # Run FastAPI server
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    port = int(os.getenv("PORT", 8000))  # Use Render's assigned PORT
+    uvicorn.run(app, host="0.0.0.0", port=port)
