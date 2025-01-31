@@ -113,10 +113,25 @@ prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 
 # Define chatbot function
 @chain
+@chain
 def memory_rag_chain(question):
     if retriever is None:
-        return "⚠️ Error: Document retrieval system is not available."
+        return "Error: Document retrieval system is not available."
 
+    # Check if the question is too vague
+    vague_questions = [
+        "edit the shifts",
+        "change availability",
+        "update schedule",
+        "modify shifts",
+        "change work hours"
+    ]
+    
+    # If the question is too vague, ask for more details
+    if any(vague_phrase in question.lower() for vague_phrase in vague_questions):
+        return "I will be able to assist with further details. Can you specify which shifts or dates you want to edit?"
+
+    # Retrieve context from documents
     retrieved_docs = retriever.invoke(question)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
 
@@ -125,14 +140,15 @@ def memory_rag_chain(question):
         chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
         return response
 
+    # Define AI response generation chain
     chain = (
-            RunnablePassthrough.assign(
-                message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
-                context=RunnablePassthrough()
-            )
-            | prompt_template
-            | chat
-            | StrOutputParser()
+        RunnablePassthrough.assign(
+            message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
+            context=RunnablePassthrough()
+        )
+        | prompt_template
+        | chat
+        | StrOutputParser()
     )
 
     response = chain.invoke({"question": question, "context": context})
