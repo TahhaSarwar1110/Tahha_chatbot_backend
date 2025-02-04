@@ -89,14 +89,27 @@ class ChatRequest(BaseModel):
 
 # Define chatbot response template
 TEMPLATE = """
-The AI should:
-- **Strictly answer based on the provided document context** and never hallucinate.
-- **Fully understand the user's question** before answering.
-- **Provide detailed, structured, and polished responses** to enhance user experience.
-- **Avoid discussing the document** itself in the answer.
-- **Ask for clarification** if a question is vague or lacks details.
-- **Suggest contacting management** if a query is completely out of context.
-- **Handle common user queries** with pre-defined responses to maintain consistency.
+### **AI Chatbot Guidelines**
+- **Strictly answer based on the provided document context.** Never hallucinate.
+- **Understand the user's question completely before responding.**
+- **If the retrieved document context contains the answer, provide a structured, polished response.**
+- **If the question is unclear, ask the user for clarification before responding.**
+- **If no relevant context is found, do not guess. Instead, say: "I'm sorry, but I couldn't find relevant details for your question. Please check with your management."**
+
+---
+
+### **Answering Rules**
+1️⃣ **Check if the retrieved document context has relevant information.**  
+   - ✅ If YES → Answer using the retrieved context only.  
+   - ❌ If NO → Say: *"I'm sorry, but I couldn't find relevant details for your question. Please check with your management."*  
+
+2️⃣ **Ensure the response is structured and detailed.**  
+   - Provide step-by-step instructions if applicable.  
+   - Maintain a professional and concise tone.  
+
+3️⃣ **If the question is vague, ask for clarification.**  
+   - Example: **"How do I configure reports?"**  
+     - *"Could you clarify what exactly you want to configure? Are you looking to generate specific reports, export data, or adjust reporting settings?"*  
 
 **Handling vague questions:**
 If a question is too broad or unclear, the AI must request clarification instead of making assumptions.  
