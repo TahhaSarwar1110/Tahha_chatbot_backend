@@ -133,22 +133,35 @@ def memory_rag_chain(question):
     if retriever is None:
         return "⚠️ Error: Document retrieval system is not available."
 
+    # Retrieve the most relevant context from the document
     retrieved_docs = retriever.invoke(question)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
 
+    # ✅ Step 1: Ensure context exists (Preventing Hallucinations)
     if not context.strip():
-        response = "Sorry, I don't know the answer."
+        response = "I'm sorry, but I couldn't find relevant details for your question. Could you provide more specifics?"
         chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
         return response
 
+    # ✅ Step 2: Detect vague queries & force clarification
+    vague_keywords = ["configure", "set up", "help with", "how do I manage", "how do I edit", "how do I adjust"]
+    if any(keyword in question.lower() for keyword in vague_keywords):
+        response = (
+            "Could you clarify what exactly you want to configure? "
+            "For example, are you looking to generate specific reports, export data, or change reporting settings?"
+        )
+        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
+        return response
+
+    # ✅ Step 3: If context is valid, proceed with answering the question
     chain = (
-            RunnablePassthrough.assign(
-                message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
-                context=RunnablePassthrough()
-            )
-            | prompt_template
-            | chat
-            | StrOutputParser()
+        RunnablePassthrough.assign(
+            message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
+            context=RunnablePassthrough()
+        )
+        | prompt_template
+        | chat
+        | StrOutputParser()
     )
 
     response = chain.invoke({"question": question, "context": context})
