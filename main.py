@@ -133,63 +133,22 @@ def memory_rag_chain(question):
     if retriever is None:
         return "⚠️ Error: Document retrieval system is not available."
 
-    # Retrieve the most relevant context from the document
     retrieved_docs = retriever.invoke(question)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
 
-    # ✅ Step 1: Ensure context exists (Preventing Hallucinations)
     if not context.strip():
-        response = "I'm sorry, but I couldn't find relevant details for your question. Could you provide more specifics?"
+        response = "Sorry, I don't know the answer."
         chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
         return response
 
-    # ✅ Step 2: Detect vague queries & ask **relevant** clarifications
-    vague_questions = {
-        "overtime": ["overtime", "work hours", "payroll settings", "extra hours"],
-        "reports": ["report", "configure reports", "generate reports", "export data"],
-        "permissions": ["access", "edit profile", "change permissions", "manage staff"],
-        "availability": ["schedule", "shift settings", "availability", "delete availability"]
-    }
-
-    if any(word in question.lower() for word in vague_questions["overtime"]):
-        response = (
-            "Could you clarify what aspect of overtime settings you need help with? "
-            "For example, are you configuring daily overtime, weekly overtime, or setting overtime thresholds for specific employees?"
-        )
-        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
-        return response
-
-    if any(word in question.lower() for word in vague_questions["reports"]):
-        response = (
-            "Could you clarify what exactly you want to configure in reports? "
-            "Are you looking to generate specific reports, export data, or adjust report settings?"
-        )
-        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
-        return response
-
-    if any(word in question.lower() for word in vague_questions["permissions"]):
-        response = (
-            "Are you looking to change your own permissions, assign permissions to others, or restrict access for specific users?"
-        )
-        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
-        return response
-
-    if any(word in question.lower() for word in vague_questions["availability"]):
-        response = (
-            "Are you trying to set your availability, delete an availability entry, or change shift schedules?"
-        )
-        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
-        return response
-
-    # ✅ Step 3: If context is valid, proceed with answering the question
     chain = (
-        RunnablePassthrough.assign(
-            message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
-            context=RunnablePassthrough()
-        )
-        | prompt_template
-        | chat
-        | StrOutputParser()
+            RunnablePassthrough.assign(
+                message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
+                context=RunnablePassthrough()
+            )
+            | prompt_template
+            | chat
+            | StrOutputParser()
     )
 
     response = chain.invoke({"question": question, "context": context})
