@@ -143,12 +143,40 @@ def memory_rag_chain(question):
         chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
         return response
 
-    # ✅ Step 2: Detect vague queries & force clarification
-    vague_keywords = ["configure", "set up", "help with", "how do I manage", "how do I edit", "how do I adjust"]
-    if any(keyword in question.lower() for keyword in vague_keywords):
+    # ✅ Step 2: Detect vague queries & ask **relevant** clarifications
+    vague_questions = {
+        "overtime": ["overtime", "work hours", "payroll settings", "extra hours"],
+        "reports": ["report", "configure reports", "generate reports", "export data"],
+        "permissions": ["access", "edit profile", "change permissions", "manage staff"],
+        "availability": ["schedule", "shift settings", "availability", "delete availability"]
+    }
+
+    if any(word in question.lower() for word in vague_questions["overtime"]):
         response = (
-            "Could you clarify what exactly you want to configure? "
-            "For example, are you looking to generate specific reports, export data, or change reporting settings?"
+            "Could you clarify what aspect of overtime settings you need help with? "
+            "For example, are you configuring daily overtime, weekly overtime, or setting overtime thresholds for specific employees?"
+        )
+        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
+        return response
+
+    if any(word in question.lower() for word in vague_questions["reports"]):
+        response = (
+            "Could you clarify what exactly you want to configure in reports? "
+            "Are you looking to generate specific reports, export data, or adjust report settings?"
+        )
+        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
+        return response
+
+    if any(word in question.lower() for word in vague_questions["permissions"]):
+        response = (
+            "Are you looking to change your own permissions, assign permissions to others, or restrict access for specific users?"
+        )
+        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
+        return response
+
+    if any(word in question.lower() for word in vague_questions["availability"]):
+        response = (
+            "Are you trying to set your availability, delete an availability entry, or change shift schedules?"
         )
         chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
         return response
