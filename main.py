@@ -68,7 +68,7 @@ try:
             documents=character_splitted_documents,
             persist_directory="./TCP_directory_1"
         )
-        retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 3, "lambda_multi": 0.5})
+        retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 5, "lambda_multi": 0.5})
 
 except Exception as e:
     print(f"❌ ERROR LOADING DOCUMENTS: {e}")
