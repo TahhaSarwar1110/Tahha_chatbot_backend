@@ -2,9 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from dotenv import load_dotenv
 
-# LangChain Libraries
+# Import LangChain and document processing libraries
 from langchain.memory import ConversationSummaryMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
@@ -12,120 +11,67 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from operator import itemgetter
 from langchain_core.runnables import chain
-
-# RAG setup libraries
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 
-# Load environment variables
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-if not openai_api_key:
-    raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing. Add it in Render's Environment Variables.")
-
 # Initialize FastAPI
 app = FastAPI()
 
-# Enable CORS to allow frontend access
+# Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all frontend origins
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Root Route (For Health Check)
-@app.get("/")
-def home():
-    return {"message": "FastAPI Chatbot is running successfully!"}
-
-# Load and process document
-retriever = None  # Default to None in case of failure
-try:
-    pdf_path = "User Query.pdf"
-
-    if not os.path.exists(pdf_path):
-        print(f"⚠️ WARNING: '{pdf_path}' not found! Continuing without document retrieval.")
-    else:
-        page = PyPDFLoader(pdf_path)
-        my_document = page.load()
-
-        character_splitter = CharacterTextSplitter(separator=".", chunk_size=500, chunk_overlap=50)
-        character_splitted_documents = character_splitter.split_documents(my_document)
-
-        for doc in character_splitted_documents:
-            doc.page_content = " ".join(doc.page_content.split())
-
-        # Initialize vector store and retriever
-        embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
-        vector_store = Chroma.from_documents(
-            embedding=embedding,
-            documents=character_splitted_documents,
-            persist_directory="./TCP_directory_1"
-        )
-        retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 5, "lambda_multi": 0.5})
-
-except Exception as e:
-    print(f"❌ ERROR LOADING DOCUMENTS: {e}")
-
-# Initialize chatbot memory
-chat = ChatOpenAI(
-    model="gpt-4",
-    temperature=0,
-    max_tokens=250,
-    openai_api_key=openai_api_key
-)
-
-chat_memory = ConversationSummaryMemory(llm=chat, memory_key="message_log")
-
-# Define chatbot request model
+# Define a Pydantic model for incoming chat requests
 class ChatRequest(BaseModel):
+    role: str
     message: str
 
-# Define chatbot response template
+# Initialize conversation memory using ChatOpenAI (default parameters here)
+chat_memory = ConversationSummaryMemory(llm=ChatOpenAI(), memory_key='message_log')
+
+# Create vector stores for each role by loading corresponding PDF documents
+vector_stores = {}
+embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
+role_files = {
+    "accountant": 'Accountant.pdf',
+    "admin": 'Admin.pdf',
+    "employee with scheduling(individual managment)rights": 'Employee with Scheduling(Individual Managment)Rights.pdf',
+    "employee": 'Employee.pdf',
+    "manager": 'Manager.pdf',
+    "scheduler": 'Scheduler.pdf',
+    "schedule viewer": 'Schedule viewer.pdf',
+    "supervisor": 'Supervisor.pdf'
+}
+
+for role, file_path in role_files.items():
+    page = PyPDFLoader(file_path)
+    role_document = page.load()
+
+    character_splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=100)
+    character_splitted_documents = character_splitter.split_documents(role_document)
+
+    for i in range(len(character_splitted_documents)):
+        character_splitted_documents[i].page_content = ' '.join(character_splitted_documents[i].page_content.split())
+
+    vector_stores[role] = Chroma.from_documents(
+        embedding=embedding,
+        documents=character_splitted_documents,
+        persist_directory=f"./vector_store_{role}"
+    )
+
+# Define the prompt template with placeholders for conversation history, retrieved context, and question
 TEMPLATE = """
-### **AI Chatbot Guidelines**
-- **Strictly answer based on the provided document context.** Never hallucinate.
-- **Understand the user's question completely before responding.**
-- **If the retrieved document context contains the answer, provide a structured, polished response.**
-- **If the question is unclear, ask the user for clarification before responding.**
-- **If no relevant context is found, do not guess. Instead, say: "I'm sorry, but I couldn't find relevant details for your question. Please check with your management."**
-
----
-
-### **Answering Rules**
-1️⃣ **Check if the retrieved document context has relevant information.**  
-   - ✅ If YES → Answer using the retrieved context only.  
-   - ❌ If NO → Say: *"I'm sorry, but I couldn't find relevant details for your question. Please check with your management."*  
-
-2️⃣ **Ensure the response is structured and detailed.**  
-   - Provide step-by-step instructions if applicable.  
-   - Maintain a professional and concise tone.  
-
-3️⃣ **If the question is vague, ask for clarification.**  
-   - Example: **"How do I configure reports?"**  
-     - *"Could you clarify what exactly you want to configure? Are you looking to generate specific reports, export data, or adjust reporting settings?"*  
-
-**Handling vague questions:**
-If a question is too broad or unclear, the AI must request clarification instead of making assumptions.  
-- Example: **"I need help with overtime settings."**  
-  - ✅ Expected: *"Could you clarify what aspect of overtime settings you need help with? Are you configuring daily overtime, weekly overtime, or thresholds for specific employees?"*  
-  - ❌ Failure: If it assumes the user wants to set an 8-hour threshold for an employee.
-
-**Example Clarifications & Responses:**
-1. **Updating emails in bulk** → "Bulk edit feature does not allow users to update employee emails in bulk. It only allows adding employees in bulk."
-2. **Reactivating a permanent employee's email** → "To deactivate the temporary email associated with the employee, go to Staff > Disabled > the employee's Profile > release this email. To reactivate with the correct email, go to Staff > Disabled > the employee's Profile > Enable this employee."
-3. **Using the same email for multiple employers** → "Employees can use Humanity for multiple employers by registering with different email addresses. Alternatively, they can employ an alias by appending '+1' before the '@' symbol in their email address. Example: `kyle+1@gmail.com` forwards emails to `kyle@gmail.com`. Some email providers may have different procedures."
-4. **Viewing reports of a disabled employee** → "Are you interested in the scheduled hours report or worked hours report?"
-5. **Editing shifts for a week** → "Could you specify the changes you need? I’ll be happy to assist further."
-6. **Deleting availability** → "To delete your availability, go to the availability module, click on it, and select the option to delete your availability."
-7. **Handling completely out-of-context questions** → "I’m unable to find information on that. Please reach out to your management for further assistance."
- further assistance."
+Answer the question strictly based on the provided context.
+Avoid Hallucinating
+If the answer in the dataset has it, the AI must always add Must Action: Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
 
 Current Conversation:
 {message_log}
@@ -138,49 +84,109 @@ Human:
 
 AI:
 """
+
 prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 
-# Define chatbot function
-@chain
-def memory_rag_chain(question):
-    if retriever is None:
-        return "⚠️ Error: Document retrieval system is not available."
+# Initialize ChatOpenAI instance
+chat = ChatOpenAI(
+    model="gpt-4-turbo",
+    temperature=0,
+    max_tokens=500,
+)
 
-    retrieved_docs = retriever.invoke(question)
+# Normalize role keys for matching (lowercase keys)
+normalized_roles = {role.replace("_", " ").lower(): role for role in role_files.keys()}
+
+# List of roles that have permission to see must-do actions
+roles_with_permission = ["admin", "manager", "supervisor", "scheduler"]
+
+# Function to extract "Must-Do" actions from the context
+def extract_must_do_actions(context):
+    must_do_actions = []
+    if 'Must-Do:' in context:
+        for line in context.split('\n'):
+            if 'Must-Do:' in line:
+                must_do_actions.append(line.split('Must-Do:')[1].strip())
+    return must_do_actions
+
+# Intent detection to check if the user is asking about adding an employee
+def detect_intent(user_input):
+    intents = {
+        "add employee": [
+            "add a new employee to my team?", "officially add", "setup a profile",
+            "steps to add an employee", "steps to setup an account", "setup an account",
+            "add an employee", "bring a new employee", "new employee", "register a new staff member",
+            "register an employee", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
+        ]
+    }
+    for intent, phrases in intents.items():
+        if any(phrase in user_input.lower() for phrase in phrases):
+            return intent
+    return "general"
+
+# CoRAG chain implementation that retrieves context and generates a response
+def corag_chain(user_input, user_role):
+    retriever = vector_stores[user_role].as_retriever(search_type='mmr', search_kwargs={'k': 3, 'lambda_multi': 0.4})
+    retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
 
     if not context.strip():
-        response = "Sorry, I don't know the answer."
-        chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
-        return response
+        return "The provided document does not contain this information. Please clarify your query."
 
-    chain = (
-            RunnablePassthrough.assign(
-                message_log=RunnableLambda(chat_memory.load_memory_variables) | itemgetter("message_log"),
-                context=RunnablePassthrough()
-            )
-            | prompt_template
-            | chat
-            | StrOutputParser()
+    # Special handling for "add employee" intent
+    if detect_intent(user_input) == "add employee":
+        if user_role in roles_with_permission:
+            return "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
+        else:
+            return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
+
+    # Build the chain with conversation memory, prompt template, and chat model
+    response_chain = (
+        RunnablePassthrough.assign(
+            message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
+            context=RunnablePassthrough()
+        )
+        | prompt_template
+        | chat
+        | StrOutputParser()
     )
 
-    response = chain.invoke({"question": question, "context": context})
-    chat_memory.save_context(inputs={"input": question}, outputs={"output": response})
+    response = response_chain.invoke({
+        "question": user_input,
+        "context": context,
+        "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
+    })
+
+    # Append must-do actions if available and the user has permission
+    must_do_actions = extract_must_do_actions(context)
+    if must_do_actions and user_role in roles_with_permission:
+        response += "\n\n**Must-Do Action:** " + ', '.join(must_do_actions)
+
+    chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
 
-# API Endpoint for chatbot
+# Health check endpoint
+@app.get("/")
+def read_root():
+    return {"message": "FastAPI Chatbot is running."}
+
+# Chat endpoint: accepts a JSON payload with a role and a message
 @app.post("/chat")
-async def chat_endpoint(request: ChatRequest):
+def chat_endpoint(request: ChatRequest):
+    # Normalize and validate the provided role
+    user_role_key = request.role.lower()
+    if user_role_key in normalized_roles:
+        user_role = normalized_roles[user_role_key]
+    else:
+        raise HTTPException(status_code=400, detail="Invalid role provided.")
+
     try:
-        response = memory_rag_chain.invoke(request.message)
+        response = corag_chain(request.message, user_role)
         return {"response": response}
     except Exception as e:
-        print(f"❌ ERROR PROCESSING REQUEST: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Run FastAPI server
 if __name__ == "__main__":
     import uvicorn
-
-    port = int(os.getenv("PORT", 8000))  # Use Render's assigned PORT
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
