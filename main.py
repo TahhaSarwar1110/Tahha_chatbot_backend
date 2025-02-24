@@ -79,7 +79,7 @@ for role, file_path in role_files.items():
 # Define prompt template
 TEMPLATE = """
 Answer the question strictly based on the provided context.
-Avoid Hallucinating
+Avoid Hallucinating at all cost
 If the answer in the dataset has it, the AI must always add Must Action: Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
 
 Current Conversation:
@@ -126,7 +126,7 @@ def detect_intent(user_input):
             "add a new employee to my team?", "officially add", "setup a profile",
             "steps to add an employee", "steps to setup an account", "setup an account",
             "add an employee", "bring a new employee", "new employee", "register a new staff member",
-            "register an employee", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
+            "register an employee","give system access", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
         ]
     }
     for intent, phrases in intents.items():
