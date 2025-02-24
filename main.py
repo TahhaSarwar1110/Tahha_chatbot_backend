@@ -99,7 +99,7 @@ prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 # Initialize ChatOpenAI instance for generating responses
 chat = ChatOpenAI(
     model="gpt-4-turbo",
-    temperature=0.3,
+    temperature=0.1,
     max_tokens=500,
     openai_api_key=openai_api_key
 )
