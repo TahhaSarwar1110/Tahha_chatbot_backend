@@ -125,7 +125,7 @@ def detect_intent(user_input):
         "add employee": [
             "add a new employee to my team?", "officially add", "setup a profile",
             "steps to add an employee", "steps to setup an account", "setup an account",
-            "add an employee", "bring a new employee", "new employee", "register a new staff member",
+            "add an employee", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member",
             "register an employee","give system access", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
         ]
     }
