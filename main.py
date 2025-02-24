@@ -101,6 +101,7 @@ chat = ChatOpenAI(
     model="gpt-4-turbo",
     temperature=0.3,
     max_tokens=500,
+    stream = True,
     openai_api_key=openai_api_key
 )
 
