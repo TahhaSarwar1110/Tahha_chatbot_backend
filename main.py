@@ -99,7 +99,7 @@ prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 # Initialize ChatOpenAI instance for generating responses
 chat = ChatOpenAI(
     model="gpt-4-turbo",
-    temperature=0,
+    temperature=0.3,
     max_tokens=500,
     openai_api_key=openai_api_key
 )
@@ -138,7 +138,7 @@ def detect_intent(user_input):
 def corag_chain(user_input, user_role):
     if user_role not in vector_stores:
         return f"Vector store for role '{user_role}' not available. Please check your role or document."
-    retriever = vector_stores[user_role].as_retriever(search_type='mmr', search_kwargs={'k': 3, 'lambda_multi': 0.4})
+    retriever = vector_stores[user_role].as_retriever(search_type='mmr', search_kwargs={'k': 3, 'lambda_multi': 0.3})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
