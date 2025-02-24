@@ -1,53 +1,51 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    raise RuntimeError("OPENAI_API_KEY is missing. Please add it in your environment variables.")
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
-# LangChain and document processing imports
+# LangChain Libraries
 from langchain.memory import ConversationSummaryMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda, chain
 from operator import itemgetter
-from langchain_core.runnables import chain
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_core.documents import Document
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 
-# Initialize FastAPI app
+# Load environment variables
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing. Add it in your environment variables.")
+
+# Initialize FastAPI
 app = FastAPI()
 
 # Enable CORS to allow frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Define a Pydantic model for chat requests
+# Define request model that expects both role and message
 class ChatRequest(BaseModel):
     role: str
     message: str
 
-# Initialize conversation memory using ChatOpenAI (passing the API key)
+# Initialize conversation memory using ChatOpenAI with API key
 chat_memory = ConversationSummaryMemory(
     llm=ChatOpenAI(openai_api_key=openai_api_key),
     memory_key='message_log'
 )
 
-# Create vector stores for each role by loading corresponding PDF documents
+# Define vector stores for multiple roles
 vector_stores = {}
 embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
 role_files = {
@@ -61,27 +59,24 @@ role_files = {
     "supervisor": 'Supervisor.pdf'
 }
 
+# Build vector store for each role
 for role, file_path in role_files.items():
-    try:
-        page = PyPDFLoader(file_path)
-        role_document = page.load()
-    except Exception as e:
-        raise RuntimeError(f"Error loading file {file_path}: {e}")
-
+    if not os.path.exists(file_path):
+        print(f"⚠️ WARNING: '{file_path}' not found for role '{role}'. Skipping this role.")
+        continue
+    page = PyPDFLoader(file_path)
+    role_document = page.load()
     character_splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=100)
     character_splitted_documents = character_splitter.split_documents(role_document)
-
-    # Clean up whitespace in document chunks
     for i in range(len(character_splitted_documents)):
         character_splitted_documents[i].page_content = ' '.join(character_splitted_documents[i].page_content.split())
-
     vector_stores[role] = Chroma.from_documents(
         embedding=embedding,
         documents=character_splitted_documents,
         persist_directory=f"./vector_store_{role}"
     )
 
-# Define the prompt template
+# Define prompt template
 TEMPLATE = """
 Answer the question strictly based on the provided context.
 Avoid Hallucinating
@@ -115,7 +110,7 @@ normalized_roles = {role.replace("_", " ").lower(): role for role in role_files.
 # Roles with permission to view must-do actions
 roles_with_permission = ["admin", "manager", "supervisor", "scheduler"]
 
-# Function to extract "Must-Do" actions from context
+# Extract must-do actions from context
 def extract_must_do_actions(context):
     must_do_actions = []
     if 'Must-Do:' in context:
@@ -124,7 +119,7 @@ def extract_must_do_actions(context):
                 must_do_actions.append(line.split('Must-Do:')[1].strip())
     return must_do_actions
 
-# Intent detection to check if user is asking about adding an employee
+# Intent mapping for "add employee" queries
 def detect_intent(user_input):
     intents = {
         "add employee": [
@@ -139,23 +134,25 @@ def detect_intent(user_input):
             return intent
     return "general"
 
-# Core CoRAG chain: retrieve context and generate response
+# Core CoRAG function that retrieves context and generates a response
 def corag_chain(user_input, user_role):
+    if user_role not in vector_stores:
+        return f"Vector store for role '{user_role}' not available. Please check your role or document."
     retriever = vector_stores[user_role].as_retriever(search_type='mmr', search_kwargs={'k': 3, 'lambda_multi': 0.4})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
-
+    
     if not context.strip():
         return "The provided document does not contain this information. Please clarify your query."
-
+    
     # Special handling for "add employee" intent
     if detect_intent(user_input) == "add employee":
         if user_role in roles_with_permission:
             return "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
         else:
             return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
-
-    # Build and run the chain with conversation memory, prompt template, and chat model
+    
+    # Build the response chain using conversation memory, prompt template, and ChatOpenAI
     response_chain = (
         RunnablePassthrough.assign(
             message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
@@ -165,27 +162,27 @@ def corag_chain(user_input, user_role):
         | chat
         | StrOutputParser()
     )
-
+    
     response = response_chain.invoke({
         "question": user_input,
         "context": context,
         "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
     })
-
-    # Append must-do actions if available and the user has permission
+    
+    # Append must-do actions if available and permitted
     must_do_actions = extract_must_do_actions(context)
     if must_do_actions and user_role in roles_with_permission:
         response += "\n\n**Must-Do Action:** " + ', '.join(must_do_actions)
-
+    
     chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
 
-# FastAPI health check endpoint
+# Health check endpoint
 @app.get("/")
 def read_root():
     return {"message": "FastAPI Chatbot is running."}
 
-# FastAPI chat endpoint: expects JSON with a role and a message
+# Chat endpoint that accepts a JSON payload with role and message
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):
     user_role_key = request.role.lower()
@@ -193,14 +190,14 @@ def chat_endpoint(request: ChatRequest):
         user_role = normalized_roles[user_role_key]
     else:
         raise HTTPException(status_code=400, detail="Invalid role provided.")
-
+    
     try:
         response = corag_chain(request.message, user_role)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Run the FastAPI app using uvicorn, binding to 0.0.0.0 and the provided PORT (for Render/Codesandbox)
+# Run the FastAPI app (suitable for Render and CodeSandbox)
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
