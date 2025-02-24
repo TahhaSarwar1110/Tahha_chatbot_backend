@@ -126,7 +126,7 @@ def detect_intent(user_input):
             "add a new employee to my team", "setup a new employee account", "setup his account", "setup her account", "officially add", "setup a profile", "register a new staff member", "correct way to add him", "correct way to add her",
             "steps to add an employee", "steps to setup an account", "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
             "add an employee", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
-            "register an employee", "give system access", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
+            "register an employee","assign", "give system access", "officially add someone", "add a staff", "create an employee profile", "add a new hire"
         ]
     }
     for intent, phrases in intents.items():
