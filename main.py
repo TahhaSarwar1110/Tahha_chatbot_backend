@@ -101,7 +101,6 @@ chat = ChatOpenAI(
     model="gpt-4-turbo",
     temperature=0.3,
     max_tokens=500,
-    stream = True,
     openai_api_key=openai_api_key
 )
 
@@ -124,10 +123,10 @@ def extract_must_do_actions(context):
 def detect_intent(user_input):
     intents = {
         "add employee": [
-            "add a new employee to my team", "setup a new employee account", "setup his account", "setup her account", "officially add", "setup a profile", "register a new staff member", "correct way to add him", "correct way to add her",
-            "steps to add an employee", "steps to setup an account", "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
+            "add a new employee to my team", "adding a new team member", "adding him", "adding her", "adding a new employee", "setup a new employee account", "setup his account", "setup her account", "officially add", "setup a profile", "register a new staff member", "correct way to add him", "correct way to add her",
+            "steps to add an employee", "steps to setup an account", "creating a new account",  "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
             "add an employee", "add a new team member", "add a new user", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
-            "register an employee","assign", "give system access", "officially add someone", "add staff", "add a staff", "create an employee profile", "add a new hire"
+            "register an employee","assign", "give system access", "officially add someone", "setting up", "add staff", "add a staff", "create an employee profile", "add a new hire"
         ]
     }
     for intent, phrases in intents.items():
