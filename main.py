@@ -183,30 +183,32 @@ def corag_chain(user_input, user_role):
     return response
 
 if intent == "add employee mobile":
-        if user_role in roles_with_permission:
-            # Check if context contains mobile-specific info
-            if "mobile" in context.lower():
-                response_chain = (
-                    RunnablePassthrough.assign(
-                        message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
-                        context=RunnablePassthrough()
-                    )
-                    | prompt_template
-                    | chat
-                    | StrOutputParser()
+    if user_role in roles_with_permission:
+        # Check if context contains mobile-specific info
+        if "mobile" in context.lower():
+            response_chain = (
+                RunnablePassthrough.assign(
+                    message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
+                    context=RunnablePassthrough()
                 )
-                response = response_chain.invoke({
-                    "question": user_input,
-                    "context": context,
-                    "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
-                })
-            else:
-                response = "Sorry, I don’t have information on adding an employee using a mobile app based on the provided documents. Consult your system’s mobile app documentation."
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-return response
-
-
-
+                | prompt_template
+                | chat
+                | StrOutputParser()
+            )
+            response = response_chain.invoke({
+                "question": user_input,
+                "context": context,
+                "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
+            })
+        else:
+            response = "Sorry, I don’t have information on adding an employee using a mobile app based on the provided documents. Consult your system’s mobile app documentation."
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+    else:
+        response = f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+      
 # Health check endpoint
 @app.get("/")
 def read_root():
