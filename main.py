@@ -151,7 +151,7 @@ def detect_intent(user_input):
 def corag_chain(user_input, user_role):
     if user_role not in vector_stores:
         return f"Vector store for role '{user_role}' not available. Please check your role or document."
-    retriever = vector_stores[user_role].as_retriever(search_type='similarity', search_kwargs={'k': 2})
+    retriever = vector_stores[user_role].as_retriever(search_type='similarity', search_kwargs={'k': 1})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
