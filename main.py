@@ -79,8 +79,11 @@ for role, file_path in role_files.items():
 # Define prompt template
 TEMPLATE = """
 Precisely Answer the question strictly based on the provided context.
-Avoid Hallucinating at all cost
-If the answer in the dataset has it, the AI must always add Must Action: Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
+The AI should not make wild guesses.
+Avoid Hallucinating
+If user query is from defined intents always add must action : Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
+If user query is not from defined intents do not add must action.
+If user states error, the AI should ask questions about error rather than making wild guesses.
 
 Current Conversation:
 {message_log}
@@ -99,7 +102,7 @@ prompt_template = PromptTemplate.from_template(template=TEMPLATE)
 # Initialize ChatOpenAI instance for generating responses
 chat = ChatOpenAI(
     model="gpt-4-turbo",
-    temperature=0.1,
+    temperature=0,
     max_tokens=500,
     openai_api_key=openai_api_key
 )
@@ -138,7 +141,7 @@ def detect_intent(user_input):
 def corag_chain(user_input, user_role):
     if user_role not in vector_stores:
         return f"Vector store for role '{user_role}' not available. Please check your role or document."
-    retriever = vector_stores[user_role].as_retriever(search_type='mmr', search_kwargs={'k': 3, 'lambda_multi': 0.3})
+    retriever = vector_stores[user_role].as_retriever(search_type='similarity', search_kwargs={'k': 3})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
