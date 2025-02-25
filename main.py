@@ -118,17 +118,12 @@ normalized_roles = {role.replace("_", " ").lower(): role for role in role_files.
 # Roles with permission to view must-do actions
 roles_with_permission = ["admin", "manager", "supervisor", "scheduler"]
 
-# Extract must-do actions from context
+# Extract must-do actions from context (simplified for "Activate Employee Profile" only)
 def extract_must_do_actions(context):
-    must_do_actions = []
-    if 'Must-Do:' in context:
-        for line in context.split('\n'):
-            if 'Must-Do:' in line:
-                must_do_actions.append(line.split('Must-Do:')[1].strip())
-    # Check for "Activate Employee Profile" specifically
+    # Only check for "Activate Employee Profile"
     if "activate employee profile" in context.lower():
-        must_do_actions.append("Activate Employee Profile")
-    return must_do_actions
+        return ["Activate Employee Profile"]
+    return []
 
 # Intent mapping for "add employee" queries
 def detect_intent(user_input):
@@ -164,37 +159,30 @@ def corag_chain(user_input, user_role):
     if detect_intent(user_input) == "add employee":
         if user_role in roles_with_permission:
             response = "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
-            # Always append activation instruction for this intent
-            response += "\n\n**Must Action:** Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members."
-            return response
         else:
             return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
-    
-    # Build the response chain using conversation memory, prompt template, and ChatOpenAI
-    response_chain = (
-        RunnablePassthrough.assign(
-            message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
-            context=RunnablePassthrough()
+    else:
+        # Build the response chain using conversation memory, prompt template, and ChatOpenAI
+        response_chain = (
+            RunnablePassthrough.assign(
+                message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
+                context=RunnablePassthrough()
+            )
+            | prompt_template
+            | chat
+            | StrOutputParser()
         )
-        | prompt_template
-        | chat
-        | StrOutputParser()
-    )
+        
+        response = response_chain.invoke({
+            "question": user_input,
+            "context": context,
+            "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
+        })
     
-    response = response_chain.invoke({
-        "question": user_input,
-        "context": context,
-        "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
-    })
-    
-    # Check for must-do actions (including "Activate Employee Profile") and append if present
+    # Append "Activate Employee Profile" at the end if present in context or required by intent
     must_do_actions = extract_must_do_actions(context)
-    if must_do_actions:
-        for action in must_do_actions:
-            if "activate employee profile" in action.lower():
-                response += "\n\n**Must Action:** Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members."
-            elif user_role in roles_with_permission:
-                response += "\n\n**Must-Do Action:** " + action
+    if must_do_actions or detect_intent(user_input) == "add employee":
+        response += "\n\n**Must Action:** Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members."
     
     chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
