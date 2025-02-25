@@ -80,7 +80,6 @@ for role, file_path in role_files.items():
 TEMPLATE = """
 Precisely Answer the question strictly based on the provided context.
 Avoid Hallucinating at all cost
-If the user query is how do i assign, the AI response should start with To assign. The AI should dynamically understand this.
 If the answer in the dataset has it, the AI must always add Must Action: Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
 
 Current Conversation:
