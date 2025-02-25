@@ -87,7 +87,7 @@ Avoid Hallucinating
 If user query is from defined intents always add must action : Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
 If user query is not from defined intents do not add must action.
 If user states error, the AI should ask questions about error rather than making wild guesses.
-if user query relates to mobile, the AI should respond: Please reach out to manaegment
+if user query relates to mobile, the AI should respond: Please reach out to management
 
 
 Current Conversation:
@@ -125,6 +125,9 @@ def extract_must_do_actions(context):
         for line in context.split('\n'):
             if 'Must-Do:' in line:
                 must_do_actions.append(line.split('Must-Do:')[1].strip())
+    # Check for "Activate Employee Profile" specifically
+    if "activate employee profile" in context.lower():
+        must_do_actions.append("Activate Employee Profile")
     return must_do_actions
 
 # Intent mapping for "add employee" queries
@@ -142,13 +145,12 @@ def detect_intent(user_input):
             return intent
     return "general"
 
-#def check_mobile_query(user_input):
-    #if "mobile" in user_input.lower():
-        #return "Reach out to management"
-    #return None  # Indicates no special handling needed
-
 # Core CoRAG function that retrieves context and generates a response
 def corag_chain(user_input, user_role):
+    # Check for mobile-related queries first
+    if "mobile" in user_input.lower():
+        return "Please reach out to management"
+    
     if user_role not in vector_stores:
         return f"Vector store for role '{user_role}' not available. Please check your role or document."
     retriever = vector_stores[user_role].as_retriever(search_type='similarity', search_kwargs={'k': 1})
@@ -161,7 +163,10 @@ def corag_chain(user_input, user_role):
     # Special handling for "add employee" intent
     if detect_intent(user_input) == "add employee":
         if user_role in roles_with_permission:
-            return "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
+            response = "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
+            # Always append activation instruction for this intent
+            response += "\n\n**Must Action:** Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members."
+            return response
         else:
             return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
     
@@ -182,14 +187,18 @@ def corag_chain(user_input, user_role):
         "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
     })
     
-    # Append must-do actions if available and permitted
+    # Check for must-do actions (including "Activate Employee Profile") and append if present
     must_do_actions = extract_must_do_actions(context)
-    if must_do_actions and user_role in roles_with_permission:
-        response += "\n\n**Must-Do Action:** " + ', '.join(must_do_actions)
+    if must_do_actions:
+        for action in must_do_actions:
+            if "activate employee profile" in action.lower():
+                response += "\n\n**Must Action:** Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members."
+            elif user_role in roles_with_permission:
+                response += "\n\n**Must-Do Action:** " + action
     
     chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
-    
+
 # Health check endpoint
 @app.get("/")
 def read_root():
