@@ -135,14 +135,10 @@ def detect_intent(user_input):
             return intent
     return "general"
 
-# Check for mobile-specific "add employee" intent
-    if any(phrase in user_input_lower for phrase in intents["add employee"]) and "mobile" in user_input_lower:
-        return "add employee mobile"
-
-def check_mobile_query(user_input):
-    if "mobile" in user_input.lower():
-        return "Reach out to management"
-    return None  # Indicates no special handling needed
+#def check_mobile_query(user_input):
+    #if "mobile" in user_input.lower():
+        #return "Reach out to management"
+    #return None  # Indicates no special handling needed
 
 # Core CoRAG function that retrieves context and generates a response
 def corag_chain(user_input, user_role):
