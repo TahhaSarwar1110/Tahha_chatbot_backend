@@ -85,7 +85,6 @@ If user input a query the answer to which is related to "add a new employee to m
             "steps to add an employee", "steps to setup an account", "creating a new account",  "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
             "add an employee", "add a new team member", "add a new user", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
             "register an employee","assign", "give system access", "officially add someone", "setting up", "add staff", "add a staff", "create an employee profile", "add a new hire" always add must action : Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
-If user query is not from defined intents do not add must action.
 If user states error, the AI should ask questions about error rather than making wild guesses.
 
 Current Conversation:
