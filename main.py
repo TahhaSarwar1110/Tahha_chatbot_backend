@@ -85,11 +85,8 @@ if a user inputs a query having intents like  "add a new employee to my team", "
             "steps to add an employee", "steps to setup an account", "creating a new account",  "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
             "add an employee", "add a new team member", "add a new user", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
             "register an employee","assign", "give system access", "officially add someone", "setting up", "add staff", "add a staff", "create an employee profile", "add a new hire" , the AI should always tell Must Action: Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile.       
+if user query has a word "mobile" in it, THE AI should respond: Please reach out to the managment. 
 
-if a user inputs a query having intents like  "add a new employee to my team", "adding a new team member", "adding him", "adding her", "adding a new employee", "setup a new employee account", "setup his account", "setup her account", "officially add", "setup a profile", "register a new staff member", "correct way to add him", "correct way to add her",
-            "steps to add an employee", "steps to setup an account", "creating a new account",  "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
-            "add an employee", "add a new team member", "add a new user", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
-            "register an employee","assign", "give system access", "officially add someone", "setting up", "add staff", "add a staff", "create an employee profile", "add a new hire" via Mobile or through mobile or using mobile, the AI should say: Please reach out to your managment
 
 Current Conversation:
 {message_log}
