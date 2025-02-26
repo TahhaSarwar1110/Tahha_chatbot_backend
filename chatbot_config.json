@@ -5,6 +5,8 @@
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"]
+            "no_permission": "If you are not seeing the option, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+    }
         },
         "assign_position": {
             "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change", "title"],
