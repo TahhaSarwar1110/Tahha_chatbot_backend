@@ -184,8 +184,8 @@ def corag_chain(user_input, user_role):
     # Append "Activate Employee Profile" at the end if present in context or required by intent
     #must_do_actions = extract_must_do_actions(context)
     if detect_intent(user_input) == "add employee":
-        if user_role in roles_with_permission:
-        response.append("Must Action:Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members.")
+         if user_role in roles_with_permission:
+          response.append("Must Action:Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the 'Staff' tab click on 'Not Activated' to view the employee profile which needs to be activated. Click on the 'Send Activation E-mail Now'. If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manually activate the employees' profile by clicking on the 'Manually Activate All' button. If you are manually activating the staff make sure to create a password and a username for the staff members.")
     
     chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
