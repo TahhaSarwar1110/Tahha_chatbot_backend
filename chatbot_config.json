@@ -10,7 +10,7 @@
             "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change"],
             "required": ["position", "role", "designation"],
             "threshold": 2,
-            "permissions": ["admin", "manager", "supervisor"]
+            "permissions": ["scheduler"]
         },
         "general": {
             "keywords": [],
