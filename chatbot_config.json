@@ -6,15 +6,12 @@
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"]
         },
-        
         "assign_position": {
             "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change", "title"],
             "required": ["assign", "position", "role", "designation", "title"],
             "threshold": 2,
             "permissions": ["scheduler"],
             "response": "Only schedulers are allowed to assign positions. Please contact your scheduler for assistance."
-}
-
         },
         "general": {
             "keywords": [],
