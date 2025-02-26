@@ -80,6 +80,8 @@ for role, file_path in role_files.items():
 TEMPLATE = """
 Precisely Answer the question strictly based on the provided context.
 The AI should not make wild guesses.
+If answer is not available in the relevant context, the AI should not make wild guesses. The AI should not hallucinate.
+Only scheduler can assign positions.
 Avoid Hallucinating.
 Precisely Answer the question strictly based on the provided context.
 The AI should not make wild guesses.
@@ -148,7 +150,7 @@ def corag_chain(user_input, user_role):
     
     if user_role not in vector_stores:
         return f"Vector store for role '{user_role}' not available. Please check your role or document."
-    retriever = vector_stores[user_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.8})
+    retriever = vector_stores[user_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.75})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
