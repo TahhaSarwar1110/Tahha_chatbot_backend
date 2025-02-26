@@ -6,14 +6,12 @@
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"]
         },
-
-"assign_position": {
-    "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change"],
-    "required": ["position", "role", "designation"],
-    "threshold": 2,
-    "permissions": ["admin", "manager", "supervisor"]
-}
-        
+        "assign_position": {
+            "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change"],
+            "required": ["position", "role", "designation"],
+            "threshold": 2,
+            "permissions": ["admin", "manager", "supervisor"]
+        },
         "general": {
             "keywords": [],
             "response": "I’m not sure how to help with that yet. Could you provide more details?"
@@ -21,7 +19,7 @@
     },
     "roles": {
         "accountant": "Accountant.pdf",
-        "employee with scheduling(individual management)rights": "Employee with Scheduling(Individual Managment)Rights.pdf",
+        "employee with scheduling(individual managment)rights": "Employee with Scheduling(Individual Managment)Rights.pdf",
         "schedule viewer": "Schedule viewer.pdf",
         "employee": "Employee.pdf",
         "supervisor": "Supervisor.pdf",
