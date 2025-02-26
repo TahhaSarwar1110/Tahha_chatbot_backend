@@ -6,6 +6,14 @@
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"]
         },
+
+"assign_position": {
+    "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change"],
+    "required": ["position", "role", "designation"],
+    "threshold": 2,
+    "permissions": ["admin", "manager", "supervisor"]
+}
+        
         "general": {
             "keywords": [],
             "response": "I’m not sure how to help with that yet. Could you provide more details?"
