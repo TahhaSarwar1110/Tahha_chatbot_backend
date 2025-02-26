@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +10,7 @@ from langchain.memory import ConversationSummaryMemory
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough, RunnableLambda, chain
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from operator import itemgetter
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -20,77 +21,57 @@ from langchain_community.document_loaders import PyPDFLoader
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing. Add it in your environment variables.")
+    raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing.")
 
 # Initialize FastAPI
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# Enable CORS to allow frontend access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Define request model that expects both role and message
+# Define request model
 class ChatRequest(BaseModel):
-    role: str
+    role: str = ""  # Allow empty role initially
     message: str
 
-# Initialize conversation memory using ChatOpenAI with API key
+# Load config
+CONFIG_PATH = "chatbot_config.json"
+if not os.path.exists(CONFIG_PATH):
+    raise RuntimeError(f"❌ ERROR: Config file '{CONFIG_PATH}' not found.")
+with open(CONFIG_PATH, "r") as f:
+    config = json.load(f)
+
+# Initialize conversation memory with additional context for role
 chat_memory = ConversationSummaryMemory(
     llm=ChatOpenAI(openai_api_key=openai_api_key),
     memory_key='message_log'
 )
 
-# Define vector stores for multiple roles
-vector_stores = {}
+# Initialize embeddings
 embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
-role_files = {
-    "accountant": 'Accountant.pdf',
-    "admin": 'Admin.pdf',
-    "employee with scheduling(individual managment)rights": 'Employee with Scheduling(Individual Managment)Rights.pdf',
-    "employee": 'Employee.pdf',
-    "manager": 'Manager.pdf',
-    "scheduler": 'Scheduler.pdf',
-    "schedule viewer": 'Schedule viewer.pdf',
-    "supervisor": 'Supervisor.pdf'
-}
 
-# Build vector store for each role
-for role, file_path in role_files.items():
+# Build vector stores dynamically
+vector_stores = {}
+for role, file_path in config["roles"].items():
     if not os.path.exists(file_path):
-        print(f"⚠️ WARNING: '{file_path}' not found for role '{role}'. Skipping this role.")
+        print(f"⚠️ WARNING: '{file_path}' not found for role '{role}'. Skipping.")
         continue
-    page = PyPDFLoader(file_path)
-    role_document = page.load()
-    character_splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=100)
-    character_splitted_documents = character_splitter.split_documents(role_document)
-    for i in range(len(character_splitted_documents)):
-        character_splitted_documents[i].page_content = ' '.join(character_splitted_documents[i].page_content.split())
+    loader = PyPDFLoader(file_path)
+    documents = loader.load()
+    splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=100)
+    split_docs = splitter.split_documents(documents)
+    for doc in split_docs:
+        doc.page_content = ' '.join(doc.page_content.split())
     vector_stores[role] = Chroma.from_documents(
         embedding=embedding,
-        documents=character_splitted_documents,
-        persist_directory=f"./vector_store_{role}"
+        documents=split_docs,
+        persist_directory=f"{config['vector_store_dir']}/{role}"
     )
 
 # Define prompt template
 TEMPLATE = """
-Precisely Answer the question strictly based on the provided context.
-The AI should not make wild guesses.
-If answer is not available in the relevant context, the AI should not make wild guesses. The AI should not hallucinate.
-The AI should know that Only scheduler can assign positions.
-Avoid Hallucinating.
-Precisely Answer the question strictly based on the provided context.
-The AI should not make wild guesses.
-Avoid Hallucinating
-If user query is has phrase from intents always add must action : Activate Employee profile! Once you have created the employee profile the next step is to activate the profile. In the "Staff" tab click on "Not Activated" to view the employee profile which needs to be activated. Click on the "Send Activation E-mail Now". If the email address is added into the profile the employee will get a welcome email and the instruction to activate the profile. You can manully activate the employees' profile by clickin on the "Manually Activate All" button. If you are manually activting the staff make sure to create a password and a username for the staff membres.
-If user query is not from defined intents do not add must action.
-If user states error, the AI should ask questions about error rather than making wild guesses.
-if user query relates to mobile, the AI should respond: Please reach out to management
-
+Precisely answer the question based on the provided context from the user's role-specific document.
+If the answer is not in the context, respond: "The provided document does not contain this information. Please clarify your query."
+Avoid hallucinating or guessing.
+Only schedulers can assign positions.
 
 Current Conversation:
 {message_log}
@@ -102,109 +83,183 @@ Human:
 {question}
 
 AI:
+{must_action}
 """
+prompt_template = PromptTemplate.from_template(TEMPLATE)
 
-prompt_template = PromptTemplate.from_template(template=TEMPLATE)
+# Initialize ChatOpenAI
+chat = ChatOpenAI(model="gpt-4-turbo", temperature=0, max_tokens=500, openai_api_key=openai_api_key)
 
-# Initialize ChatOpenAI instance for generating responses
-chat = ChatOpenAI(
-    model="gpt-4-turbo",
-    temperature=0,
-    max_tokens=500,
-    openai_api_key=openai_api_key
-)
+# Dynamic intent detection
+def detect_intent(user_input: str) -> str:
+    user_input = user_input.lower().strip()
+    best_intent = "general"
+    highest_score = -1
 
-# Normalize role keys for matching (lowercase keys)
-normalized_roles = {role.replace("_", " ").lower(): role for role in role_files.keys()}
-
-# Roles with permission to view must-do actions
-roles_with_permission = ["admin", "manager", "supervisor", "scheduler"]
-
-# Extract must-do actions from context (simplified for "Activate Employee Profile" only)
-def extract_must_do_actions(context):
-    # Only check for "Activate Employee Profile"
-    if "activate employee profile" in context.lower():
-        return ["Activate Employee Profile"]
-    return []
-
-# Intent mapping for "add employee" queries
-def detect_intent(user_input):
-    intents = {
-        "add employee": [
-            "add a new employee to my team", "adding a new team member", "adding him", "adding her", "adding a new employee", "setup a new employee account", "setup his account", "setup her account", "officially add", "setup a profile", "register a new staff member", "correct way to add him", "correct way to add her",
-            "steps to add an employee", "steps to setup an account", "creating a new account",  "setup an account", "give him system access", "add him", "input an employee", "input him", "input her",
-            "add an employee", "add a new team member", "add a new user", "bring a new employee", "correct way to add an employee", "new employee", "register a new staff member", "input new team members", "input new hire",
-            "register an employee", "give system access", "officially add someone", "setting up", "add staff", "add a staff", "create an employee profile", "add a new hire"
-        ]
-    }
-    for intent, phrases in intents.items():
-        if any(phrase in user_input.lower() for phrase in phrases):
-            return intent
-    return "general"
-
-# Core CoRAG function that retrieves context and generates a response
-def corag_chain(user_input, user_role):
-    # Check for mobile-related queries first
-    if "mobile" in user_input.lower():
-        return "Please reach out to management"
+    for intent, intent_config in config["intents"].items():
+        if intent == "general":
+            continue
+        input_words = set(user_input.split())
+        intent_keywords = set(intent_config["keywords"])
+        required_keywords = set(intent_config.get("required", []))
+        threshold = intent_config.get("threshold", 1)
+        
+        has_required = not required_keywords or bool(input_words & required_keywords)
+        if not has_required:
+            continue
+        
+        keyword_overlap = len(input_words & intent_keywords)
+        if keyword_overlap >= threshold and keyword_overlap > highest_score:
+            highest_score = keyword_overlap
+            best_intent = intent
     
-    if user_role not in vector_stores:
-        return f"Vector store for role '{user_role}' not available. Please check your role or document."
-    retriever = vector_stores[user_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.7})
+    return best_intent
+
+# Check if user is specifying a method
+def detect_method(user_input: str) -> str:
+    user_input = user_input.lower().strip()
+    methods = {
+        "employee button": ["employee button", "using employee button", "button"],
+        "detailed form": ["detailed form", "using detailed form", "form"],
+        "import csv": ["import csv", "csv", "import csv files", "csv files"]
+    }
+    for method, keywords in methods.items():
+        if any(keyword in user_input for keyword in keywords):
+            return method
+    return None
+
+# Extract role from conversation history
+def get_stored_role(conversation_history: str) -> str:
+    for line in conversation_history.split('\n'):
+        if "Your role is set to" in line:
+            return line.split("Your role is set to")[1].strip().replace(".", "")
+    return None
+
+# Core response generation
+def generate_response(user_input: str, user_role: str) -> str:
+    # Load conversation history
+    memory_vars = chat_memory.load_memory_variables({})
+    conversation_history = memory_vars.get('message_log', '')
+
+    # Check if this is the start of the conversation
+    if not conversation_history and (not user_role or user_role not in vector_stores):
+        response = "Hi! What’s your role? (e.g., admin, manager, accountant)"
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+
+    # If role isn’t provided, check if it’s stored in memory
+    stored_role = get_stored_role(conversation_history) if not user_role else user_role
+    if not stored_role and user_role not in vector_stores:
+        # User might be responding with their role
+        potential_role = user_input.lower().strip()
+        if potential_role in vector_stores:
+            response = f"Your role is set to {potential_role}. How can I assist you now?"
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+        else:
+            response = "That’s not a valid role. Please specify a valid role (e.g., admin, manager, accountant)."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+    
+    # Use stored role if user_role is empty but role was previously set
+    effective_role = stored_role if not user_role else user_role
+    if effective_role not in vector_stores:
+        response = f"Role '{effective_role}' is not supported. Please specify a valid role (e.g., admin, manager, accountant)."
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+
+    # Handle special cases
+    for trigger, response in config.get("special_cases", {}).items():
+        if trigger in user_input.lower():
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+
+    # Detect intent
+    intent = detect_intent(user_input)
+    intent_config = config["intents"].get(intent, config["intents"]["general"])
+
+    # Check for method specification in follow-up
+    method = detect_method(user_input)
+    if method and "add_employee" in conversation_history:
+        retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.7})
+        method_query = f"Steps to add an employee using {method}"
+        retrieved_docs = retriever.invoke(method_query)
+        context = "\n".join([doc.page_content for doc in retrieved_docs])
+        
+        if not context.strip():
+            response = "The provided document does not contain detailed steps for this method. Please clarify your query."
+        else:
+            must_action = "Activate Employee profile!\nOnce you have created the employee profile, the next step is to activate it. In the 'Staff' tab, click on 'Not Activated' to view the profile, then click 'Send Activation E-mail Now'. If an email address is provided, the employee will receive a welcome email with activation instructions. Alternatively, manually activate by clicking 'Manually Activate All' and ensure you create a username and password."
+            response_chain = (
+                RunnablePassthrough.assign(
+                    message_log=RunnableLambda(lambda _: conversation_history),
+                    context=RunnablePassthrough(),
+                    must_action=RunnableLambda(lambda _: must_action)
+                )
+                | prompt_template
+                | chat
+                | StrOutputParser()
+            )
+            response = response_chain.invoke({
+                "question": method_query,
+                "context": context,
+                "message_log": conversation_history
+            })
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+
+    # Handle intent with permissions
+    if "permissions" in intent_config:
+        if effective_role not in intent_config["permissions"]:
+            response = f"As a {effective_role}, you do not have permission to {intent.replace('_', ' ')}. Please contact an Admin or Manager."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+        
+        # Offer the three methods for permitted roles
+        response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
+    
+    # General intent: Use role-specific document context
+    retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.7})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
     if not context.strip():
-        return "The provided document does not contain this information. Please clarify your query."
-    
-    # Special handling for "add employee" intent
-    if detect_intent(user_input) == "add employee":
-        if user_role in roles_with_permission:
-            response = "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Using Detailed Form, or 3) Bulk Upload?"
-        else:
-            return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
+        response = "The provided document does not contain this information. Please clarify your query."
     else:
-        # Build the response chain using conversation memory, prompt template, and ChatOpenAI
         response_chain = (
             RunnablePassthrough.assign(
-                message_log=(RunnableLambda(lambda inputs: chat_memory.load_memory_variables(inputs)) | itemgetter("message_log")),
-                context=RunnablePassthrough()
+                message_log=RunnableLambda(lambda _: conversation_history),
+                context=RunnablePassthrough(),
+                must_action=RunnableLambda(lambda _: "")
             )
             | prompt_template
             | chat
             | StrOutputParser()
         )
-        
         response = response_chain.invoke({
             "question": user_input,
             "context": context,
-            "message_log": chat_memory.load_memory_variables({}).get('message_log', '')
+            "message_log": conversation_history
         })
-        
+    
     chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
     return response
 
-# Health check endpoint
+# Endpoints
 @app.get("/")
 def read_root():
     return {"message": "FastAPI Chatbot is running."}
 
-# Chat endpoint that accepts a JSON payload with role and message
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):
-    user_role_key = request.role.lower()
-    if user_role_key in normalized_roles:
-        user_role = normalized_roles[user_role_key]
-    else:
-        raise HTTPException(status_code=400, detail="Invalid role provided.")
-    
     try:
-        response = corag_chain(request.message, user_role)
+        response = generate_response(request.message, request.role)
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Run the FastAPI app (suitable for Render and CodeSandbox)
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
