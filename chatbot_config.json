@@ -1,0 +1,28 @@
+{
+    "intents": {
+        "add_employee": {
+            "keywords": ["add", "new", "employee", "team", "setup", "account", "register", "staff", "profile", "hire", "system", "access", "input", "create", "grant"],
+            "required": ["employee", "staff", "team", "member", "hire", "user"],
+            "threshold": 2,
+            "permissions": ["admin", "manager", "supervisor", "scheduler"]
+        },
+        "general": {
+            "keywords": [],
+            "response": "I’m not sure how to help with that yet. Could you provide more details?"
+        }
+    },
+    "roles": {
+        "accountant": "Accountant.pdf",
+        "employee with scheduling(individual management)rights": "Employee with Scheduling(Individual Management)Rights.pdf",
+        "schedule viewer": "Schedule viewer.pdf",
+        "employee": "Employee.pdf",
+        "supervisor": "Supervisor.pdf",
+        "manager": "Manager.pdf",
+        "scheduler": "Scheduler.pdf",
+        "admin": "Admin.pdf"
+    },
+    "special_cases": {
+        "mobile": "Please reach out to management"
+    },
+    "vector_store_dir": "./vector_stores"
+}
