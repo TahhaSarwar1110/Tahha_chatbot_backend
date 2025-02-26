@@ -160,7 +160,7 @@ def corag_chain(user_input, user_role):
     # Special handling for "add employee" intent
     if detect_intent(user_input) == "add employee":
         if user_role in roles_with_permission:
-            response = "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Detailed, or 3) Bulk Upload?"
+            response = "There are multiple ways to do so. Would you like to use: 1) Use Employee Button, 2) Using Detailed Form, or 3) Bulk Upload?"
         else:
             return f"As a {user_role}, you do not have permission to add employees. Please contact an Admin or Manager."
     else:
