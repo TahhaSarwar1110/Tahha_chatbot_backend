@@ -81,7 +81,7 @@ TEMPLATE = """
 Precisely Answer the question strictly based on the provided context.
 The AI should not make wild guesses.
 If answer is not available in the relevant context, the AI should not make wild guesses. The AI should not hallucinate.
-Only scheduler can assign positions.
+The AI should know that Only scheduler can assign positions.
 Avoid Hallucinating.
 Precisely Answer the question strictly based on the provided context.
 The AI should not make wild guesses.
