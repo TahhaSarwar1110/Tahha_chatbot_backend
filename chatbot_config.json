@@ -1,7 +1,7 @@
 {
     "intents": {
         "add_employee": {
-            "keywords": ["add", "new", "employee","grant" "team", "setup", "account", "register", "staff", "profile", "hire", "system", "access", "input", "create", "grant"],
+            "keywords": ["add", "new", "employee", "grant", "team", "setup", "account", "register", "staff", "profile", "hire", "system", "access", "input", "create", "grant"],
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
