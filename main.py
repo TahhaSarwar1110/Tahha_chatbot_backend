@@ -198,7 +198,7 @@ def generate_response(user_input: str, user_role: str) -> str:
     # Check for method specification in follow-up
     method = detect_method(user_input)
     if method and "add_employee" in conversation_history:
-        retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.7})
+        retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.65})
         method_query = f"Steps to add an employee using {method}"
         retrieved_docs = retriever.invoke(method_query)
         context = "\n".join([doc.page_content for doc in retrieved_docs])
