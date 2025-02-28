@@ -32,9 +32,7 @@
         "scheduler": "Scheduler.pdf",
         "admin": "Admin.pdf"
     },
-    "special_cases": {
-        "mobile": "Please reach out to management",
-        {
+    
     "intents": {
         "add_employee": {
             "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
