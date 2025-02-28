@@ -1,3 +1,4 @@
+import re
 import os
 import json
 from fastapi import FastAPI, HTTPException
@@ -171,25 +172,24 @@ def generate_response(user_input: str, user_role: str) -> str:
         return response
 
     # Handle special cases
-   import re
 
-visibility_triggers = ["dont see", "cant see", "not see", "cant find", "havent seen", "havent found"]
-add_employee_triggers = ["add employee", "employee button", "employee option"]
-permission_response = (
-    "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
-    "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
-    "Please contact an Admin or Manager."
-)
 
-for trigger, response in config.get("special_cases", {}).items():
-    user_lower = user_input.lower()
-    if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
-        # Special handling for visibility + add employee combos
-        if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
-            return permission_response
-        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-        return response
+    visibility_triggers = ["dont see", "cant see", "not see", "cant find", "havent seen", "havent found"]
+    add_employee_triggers = ["add employee", "employee button", "employee option"]
+    permission_response = (
+        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
+        "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
+        "Please contact an Admin or Manager.")
+                                            
+    for trigger, response in config.get("special_cases", {}).items():
+        user_lower = user_input.lower()
+        if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
+            # Special handling for visibility + add employee combos
+            if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
+                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
+                return permission_response
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
 
     # Detect intent
     intent = detect_intent(user_input)
