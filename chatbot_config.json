@@ -22,11 +22,13 @@
                 "don't see", "not seeing", "can't see", "can't find", "don't find", 
                 "dont see", "cant see", "cant find", "dont find", "haven't seen", 
                 "haven't found", "havent seen", "havent found", "unable to see", "unable to find",
-                "cannot see", "cannot find", "have not seen", "have not found", "said", "mentioned"
+                "cannot see", "cannot find", "have not seen", "have not found", "said", "mentioned",
+                "missing", "disappeared", "gone", "option not available", "not visible", "where is"
             ],
-            "required": ["add", "employee", "button", "option"],
+            "required": ["add", "employee", "button", "option", "menu", "tab"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
+            "priority": 1,
             "response": {
                 "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
                 "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
