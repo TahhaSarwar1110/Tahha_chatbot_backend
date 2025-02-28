@@ -29,7 +29,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 
 # Define request model
 class ChatRequest(BaseModel):
-    role: str = ""
+    role: str = ""  # Allow empty role initially
     message: str
 
 # Load config
@@ -39,7 +39,7 @@ if not os.path.exists(CONFIG_PATH):
 with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
-# Initialize conversation memory
+# Initialize conversation memory with additional context for role
 chat_memory = ConversationSummaryMemory(
     llm=ChatOpenAI(openai_api_key=openai_api_key),
     memory_key='message_log'
@@ -69,9 +69,11 @@ for role, file_path in config["roles"].items():
 # Define prompt template
 TEMPLATE = """
 Precisely answer the question based on the provided context from the user's role-specific document.
-If the answer is not in the context, respond: "The provided document does not contain this information. Please clarify your query."
+If the answer is not in the context, respond: "Please reach out to your managment for the assistance"
 Avoid hallucinating or guessing.
-Only schedulers can assign positions.
+The AI should know that only schedulers can assign positions.
+only schedulers can assign positions.
+The AI should ask for further details if the query is related to any error.
 
 Current Conversation:
 {message_log}
@@ -128,18 +130,6 @@ def detect_method(user_input: str) -> str:
             return method
     return None
 
-# Detect permission-related queries with stricter matching
-def detect_permission_issue(user_input: str) -> bool:
-    user_input = user_input.lower().strip()
-    # Require both a visibility issue and an "add employee" reference
-    visibility_keywords = ["don’t see", "do not see", "can't see", "cannot see", "not visible", "don’t have", "missing"]
-    add_employee_keywords = ["add employee", "employee button", "employee option"]
-    
-    has_visibility_issue = any(keyword in user_input for keyword in visibility_keywords)
-    has_add_employee_ref = any(keyword in user_input for keyword in add_employee_keywords) or "option" in user_input
-    
-    return has_visibility_issue and has_add_employee_ref
-
 # Extract role from conversation history
 def get_stored_role(conversation_history: str) -> str:
     for line in conversation_history.split('\n'):
@@ -162,6 +152,7 @@ def generate_response(user_input: str, user_role: str) -> str:
     # If role isn’t provided, check if it’s stored in memory
     stored_role = get_stored_role(conversation_history) if not user_role else user_role
     if not stored_role and user_role not in vector_stores:
+        # User might be responding with their role
         potential_role = user_input.lower().strip()
         if potential_role in vector_stores:
             response = f"Your role is set to {potential_role}. How can I assist you now?"
@@ -185,16 +176,6 @@ def generate_response(user_input: str, user_role: str) -> str:
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
             return response
 
-    # Detect permission issue after method selection or add_employee intent
-    if detect_permission_issue(user_input) and "add_employee" in conversation_history:
-        response = (
-            "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
-            "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
-            "Please contact an Admin or Manager."
-        )
-        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-        return response
-
     # Detect intent
     intent = detect_intent(user_input)
     intent_config = config["intents"].get(intent, config["intents"]["general"])
@@ -210,12 +191,7 @@ def generate_response(user_input: str, user_role: str) -> str:
         if not context.strip():
             response = "The provided document does not contain detailed steps for this method. Please clarify your query."
         else:
-            must_action = (
-                "Activate Employee profile!\nOnce you have created the employee profile, the next step is to activate it. "
-                "In the 'Staff' tab, click on 'Not Activated' to view the profile, then click 'Send Activation E-mail Now'. "
-                "If an email address is provided, the employee will receive a welcome email with activation instructions. "
-                "Alternatively, manually activate by clicking 'Manually Activate All' and ensure you create a username and password."
-            )
+            must_action = "Activate Employee profile!\nOnce you have created the employee profile, the next step is to activate it. In the 'Staff' tab, click on 'Not Activated' to view the profile, then click 'Send Activation E-mail Now'. If an email address is provided, the employee will receive a welcome email with activation instructions. Alternatively, manually activate by clicking 'Manually Activate All' and ensure you create a username and password."
             response_chain = (
                 RunnablePassthrough.assign(
                     message_log=RunnableLambda(lambda _: conversation_history),
