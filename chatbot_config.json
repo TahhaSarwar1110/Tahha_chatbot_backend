@@ -1,14 +1,15 @@
 {
     "intents": {
         "add_employee": {
-            "keywords": ["add", "new", "employee", "team", "setup", "account", "register", "staff", "profile", "hire", "system", "access", "input", "create", "grant"],
+            "keywords": ["add", "new", "employee", "team", "setup", "account", "register", "staff", "profile", "hire", "system", "access", "input", "create", "grant", "not seeing", "missing", "option", "button"],
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
             "response": {
                 "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
                 "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access.",
-                "no_permission_button": "If you do not see the 'Add Employee' button, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+                "no_permission_button": "If you do not see the 'Add Employee' button, it means you don’t have the necessary permission. Please contact your administrator or manager for access.",
+                "no_permission_generic": "If you are not seeing the 'Add Employee' option, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
             }
         },
         "assign_position": {
