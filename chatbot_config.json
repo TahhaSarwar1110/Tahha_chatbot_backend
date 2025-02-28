@@ -8,7 +8,7 @@
             "response": {
                 "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
                 "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access.",
-                "no_permission_button": "If you do not see the 'Add Employee' button, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+               
             }
         },
         "assign_position": {
@@ -77,7 +77,11 @@
         "havent found the add employee option": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager.",
         "not seeing the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager.",
         "not seeing  the add employee option": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager."
-        
+        "cannot see the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager.",
+        "cannot find the add employee option": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager."
+        "cannot see add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager.",
+        "cannot find add employee option": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. Please contact an Admin or Manager."
+       
     },
     
 
