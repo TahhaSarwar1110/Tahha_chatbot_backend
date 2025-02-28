@@ -91,7 +91,7 @@ AI:
 prompt_template = PromptTemplate.from_template(TEMPLATE)
 
 # Initialize ChatOpenAI
-chat = ChatOpenAI(model="gpt-4-turbo", temperature=0, max_tokens=500, openai_api_key=openai_api_key)
+chat = ChatOpenAI(model="gpt-4-turbo", temperature=0.2, max_tokens=500, openai_api_key=openai_api_key)
 
 # Dynamic intent detection
 def detect_intent(user_input: str) -> str:
