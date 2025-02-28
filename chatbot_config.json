@@ -1,7 +1,7 @@
 {
     "intents": {
         "add_employee": {
-            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
+            "keywords": ["What is the step by step process to assign an employee to my department", "add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
