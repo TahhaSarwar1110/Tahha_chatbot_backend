@@ -238,7 +238,7 @@ def generate_response(user_input: str, user_role: str) -> str:
         return response
     
     # General intent: Use role-specific document context
-    retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 2, 'score_threshold': 0.7})
+    retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 3, 'score_threshold': 0.7})
     retrieved_docs = retriever.invoke(user_input)
     context = "\n".join([doc.page_content for doc in retrieved_docs])
     
