@@ -1,7 +1,7 @@
 {
     "intents": {
         "add_employee": {
-            "keywords": ["What is the step by step process to assign an employee to my department", "add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
+            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
@@ -23,7 +23,8 @@
                 "dont see", "cant see", "cant find", "dont find", "haven't seen", 
                 "haven't found", "havent seen", "havent found", "unable to see", "unable to find",
                 "cannot see", "cannot find", "have not seen", "have not found", "said", "mentioned",
-                "missing", "disappeared", "gone", "option not available", "not visible", "where is"
+                "missing", "disappeared", "gone", "option not available", "not visible", "where is",
+                "I dont see the said option", "the option is not available"
             ],
             "required": ["add", "employee", "button", "option", "menu", "tab"],
             "threshold": 2,
