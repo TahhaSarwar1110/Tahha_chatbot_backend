@@ -186,7 +186,7 @@ def generate_response(user_input: str, user_role: str) -> str:
         )
 
     for trigger, response in config.get("special_cases", {}).items():
-    user_lower = user_input.lower()
+        user_lower = user_input.lower()
         if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
             if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
                 chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
