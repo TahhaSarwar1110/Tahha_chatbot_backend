@@ -181,8 +181,7 @@ def generate_response(user_input: str, user_role: str) -> str:
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "havent seen", "havent found", "unable to find"]
     add_employee_triggers = ["add employee", "employee button", "employee option"]
     permission_response = (
-        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
-        "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
+        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level."
         "Please contact an Admin or Manager."
         )
 
@@ -196,7 +195,7 @@ def generate_response(user_input: str, user_role: str) -> str:
             assign_keywords = ["assign", "set", "update", "change"]
             position_keywords = ["position", "role", "designation"]
             if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
-                assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
+                assign_response = "Only schedulers can assign positions."
                 chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
                 return assign_response
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
