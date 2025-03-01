@@ -170,7 +170,7 @@ def generate_response(user_input: str, user_role: str) -> str:
     
     # Use stored role if user_role is empty but role was previously set
     effective_role = stored_role if not user_role else user_role
-    effective_role = effective_role.lower().replace(" ", "").strip()
+    effective_role = effective_role.lower().strip()
     
     if effective_role not in vector_stores:
         response = f"Role '{effective_role}' is not supported. Please specify a valid role (e.g., admin, manager, accountant)."
