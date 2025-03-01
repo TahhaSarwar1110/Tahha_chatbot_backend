@@ -18,16 +18,15 @@
             "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
         },
         "missing_add_employee_button": {
-            "if": {
-                "keywords": ["don't see", "not seeing", "can't see", "can't find", "don't find", "missing", "disappeared", "option not available", "not visible", "where is"],
-                "required": ["add", "employee", "button", "option"],
-                "threshold": 1
-            },
-            "then": {
-                "response": {
-                    "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
-                    "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
-                }
+            "keywords": [
+                "don't see", "not seeing", "can't see", "can't find", "don't find", "missing", "disappeared", "option not available", "not visible", "where is"
+            ],
+            "required": ["add", "employee", "button", "option"],
+            "threshold": 1,
+            "permissions": ["admin", "manager", "supervisor", "scheduler"],
+            "response": {
+                "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+                "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
             }
         },
         "general": {
