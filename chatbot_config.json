@@ -48,7 +48,10 @@
         "dont see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
         "dont see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
         "can't see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
-        "can't see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager."
+        "can't see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+        "cannot find the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level.",
+        "cannot see the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level."
+ 
     },
     "vector_store_dir": "./vector_stores"
 }
