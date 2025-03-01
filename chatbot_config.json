@@ -19,8 +19,7 @@
         },
         "missing_add_employee_button": {
             "keywords": [
-                      "unable to see", "unable to find",  "do not see", "do not find", "don't see", "dont see", "dont find", "don't find", "have not seen", "have not found", "haven't found", "haven't seen", "havent seen", "havent found", "not seeing", "can't see", "can't find", "don't find", "cant see", "cant find", "cannot see", "cannot find", "missing", "disappeared", "option not available", "not visible", "
-            ],
+                      "unable to see", "unable to find",  "do not see", "do not find", "don't see", "dont see", "dont find", "don't find", "have not seen", "have not found", "haven't found", "haven't seen", "havent seen", "havent found", "not seeing", "can't see", "can't find", "don't find", "cant see", "cant find", "cannot see", "cannot find", "missing", "disappeared", "option not available", "not visible"],
             "required": ["add", "employee", "button", "option"],
             "threshold": 1,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
