@@ -35,7 +35,7 @@
     },
     "roles": {
         "accountant": "Accountant.pdf",
-        "employee with scheduling (individual management) rights": "Employee with Scheduling (Individual Management) Rights.pdf"
+        "employee with scheduling (individual management) rights": "Employee with Scheduling (Individual Management) Rights.pdf",
         "schedule viewer": "Schedule viewer.pdf",
         "employee": "Employee.pdf",
         "supervisor": "Supervisor.pdf",
