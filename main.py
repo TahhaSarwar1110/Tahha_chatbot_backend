@@ -177,29 +177,37 @@ def generate_response(user_input: str, user_role: str) -> str:
     # Handle special cases
 
 
+visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
+add_employee_triggers = ["add employee", "employee button", "employee option"]
+permission_response = (
+    "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
+    "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
+    "Please contact an Admin or Manager."
+)
 
-    visibility_triggers = ["dont see", "cant see", "not see", "cant find", "havent seen", "havent found", "unable to find"]
-    add_employee_triggers = ["add employee", "employee button", "employee option"]
-    permission_response = (
-        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level."
-        "Please contact an Admin or Manager."
-        )
+for trigger, response in config.get("special_cases", {}).items():
+    user_lower = user_input.lower()
+    # Check visibility + add_employee combos first
+    if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
+        return permission_response
+    if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
+        # Special handling for assign_position intent
+        assign_keywords = ["assign", "set", "update", "change"]
+        position_keywords = ["position", "role", "designation"]
+        if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
+            # Check role from conversation history or request
+            effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
+            if effective_role == "scheduler":
+                assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
+            else:
+                assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
+            return assign_response
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
 
-    for trigger, response in config.get("special_cases", {}).items():
-        user_lower = user_input.lower()
-        if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
-            if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
-                return permission_response
-            # Special handling for assign_position intent
-            assign_keywords = ["assign", "set", "update", "change"]
-            position_keywords = ["position", "role", "designation"]
-            if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
-                assign_response = "Only schedulers can assign positions."
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
-                return assign_response
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-            return response
+   
 
     # Detect intent
     intent = detect_intent(user_input)
