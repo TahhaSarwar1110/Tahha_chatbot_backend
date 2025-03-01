@@ -13,13 +13,13 @@
         "assign_position": {
             "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change", "title", "how do I assign a position", "assign employee to department", "move employee to department", "change department", "reassign department"],
             "required": ["assign", "position", "role", "designation", "title", "department", "reassign", "move"],
-            "threshold": 0,
+            "threshold": 2,
             "permissions": ["scheduler"],
             "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
         },
         "missing_add_employee_button": {
             "keywords": [
-                "don't see", "not seeing", "can't see", "can't find", "don't find", "missing", "disappeared", "option not available", "not visible", "where is"
+                      "unable to see", "unable to find",  "do not see", "do not find", "don't see", "dont see", "dont find", "don't find", "have not seen", "have not found", "haven't found", "haven't seen", "havent seen", "havent found", "not seeing", "can't see", "can't find", "don't find", "cant see", "cant find", "cannot see", "cannot find", "missing", "disappeared", "option not available", "not visible", "
             ],
             "required": ["add", "employee", "button", "option"],
             "threshold": 1,
@@ -45,7 +45,11 @@
         "admin": "Admin.pdf"
     },
     "special_cases": {
-        "mobile": "Please reach out to management"
+        "mobile": "Please reach out to management",
+        "dont see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
+        "dont see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+        "can't see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
+        "can't see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager."
     },
     "vector_store_dir": "./vector_stores"
 }
