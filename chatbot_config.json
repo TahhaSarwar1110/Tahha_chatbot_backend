@@ -13,7 +13,7 @@
         "assign_position": {
             "keywords": ["assign", "position", "role", "job title", "designation", "set a position", "update", "change", "title", "how do I assign a position"],
             "required": ["assign", "position", "role", "designation", "title", "department", "reassign", "move"],
-            "threshold": 0,
+            "threshold": 1,
             "permissions": ["scheduler"],
             "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
         },
