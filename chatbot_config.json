@@ -1,7 +1,7 @@
 {
     "intents": {
         "add_employee": {
-            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
+            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "assign employee to department", "staff", "profile", "assign new employee to department", "hire", "system", "access", "input", "create", "grant"],
             "required": ["employee", "staff", "team", "member", "hire", "user"],
             "threshold": 2,
             "permissions": ["admin", "manager", "supervisor", "scheduler"],
@@ -11,9 +11,9 @@
             }
         },
         "assign_position": {
-            "keywords": ["assign", "position", "role", "job title", "designation", "set", "update", "change", "title", "how do I assign a position", "assign employee to department", "move employee to department", "change department", "reassign department"],
+            "keywords": ["assign", "position", "role", "job title", "designation", "set a position", "update", "change", "title", "how do I assign a position"],
             "required": ["assign", "position", "role", "designation", "title", "department", "reassign", "move"],
-            "threshold": 1,
+            "threshold": 0,
             "permissions": ["scheduler"],
             "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
         },
