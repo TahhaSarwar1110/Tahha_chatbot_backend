@@ -11,7 +11,7 @@
             }
         },
         "assign_position": {
-            "keywords": ["assign", "position", "role", "job title", "designation", "set a position", "update", "change", "title", "how do I assign a position"],
+            "keywords": ["assign position", "assign role", "assign designation", "set a position", "update position", "change position", "how do I assign a position"],
             "required": ["assign", "position", "role", "designation", "title", "department", "reassign", "move"],
             "threshold": 1,
             "permissions": ["scheduler"],
