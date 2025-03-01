@@ -138,7 +138,8 @@ def detect_method(user_input: str) -> str:
 def get_stored_role(conversation_history: str) -> str:
     for line in conversation_history.split('\n'):
         if "Your role is set to" in line:
-            return line.split("Your role is set to")[1].strip().replace(".", "")
+            return line.split("Your role is set to")[1].strip().replace(".", "").lower()
+            return role
     return None
 
 # Core response generation
@@ -169,6 +170,8 @@ def generate_response(user_input: str, user_role: str) -> str:
     
     # Use stored role if user_role is empty but role was previously set
     effective_role = stored_role if not user_role else user_role
+    effective_role = effective_role.lower().strip()
+    
     if effective_role not in vector_stores:
         response = f"Role '{effective_role}' is not supported. Please specify a valid role (e.g., admin, manager, accountant)."
         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
