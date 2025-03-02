@@ -17,20 +17,7 @@
         "added"
       
       ],
-      "required": [
-        "employee",
-        "staff",
-        "team",
-        "member",
-        "hire",
-        "user",
-        "employees",
-        "staff",
-        "team",
-        "members",
-        "hires",
-        "users"
-      ],
+      "required": [ ],
       "threshold": 1,
       "permissions": [
         "admin",
