@@ -72,9 +72,6 @@ TEMPLATE = """
 Precisely answer the question based on the provided context from the user's role-specific document.
 If the answer is not in the context, respond: "Please reach out to your managment for the assistance"
 Avoid hallucinating or guessing.
-The AI should know that only schedulers can assign positions.
-only schedulers can assign positions.
-The AI should know that only schedulers can assign positions. if any other role apart from Scheduler asks query related to assign a position, the bot should tell them that only Schedulers are allowed to assign position.
 If the user cannot find the option, or button, or add employee button or add employee option, the AI should respond: You may not have the necessary permissions.
 If the user cannot find the option, or button, or add employee button,or add employee option, the AI should respond: You may not have the necessary permissions.
 The AI should ask for further details if the query is related to any error.
