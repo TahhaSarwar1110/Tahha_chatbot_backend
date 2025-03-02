@@ -19,7 +19,19 @@
         "access",
         "input",
         "create",
-        "grant"
+        "grant",
+        "assign a new employee to department",
+        "assign a new member to department",
+        "assign a new staff to department",
+        "assign an employee to department",
+        "assign a member to department",
+        "assign a staff to department",
+        "assign new employees to department",
+        "assign  new members to department",
+        "assign a staff member to department",
+        "assign employees to department",
+        "assign  members to department",
+        "assign staff members to department"
       ],
       "required": [
         "employee",
@@ -27,7 +39,13 @@
         "team",
         "member",
         "hire",
-        "user"
+        "user",
+        "employees",
+        "staff",
+        "team",
+        "members",
+        "hires",
+        "users"
       ],
       "threshold": 1,
       "permissions": [
