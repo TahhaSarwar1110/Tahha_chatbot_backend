@@ -28,7 +28,7 @@
         "team members",
         "hires",
         "users"],
-      "threshold": 0,
+      "threshold": 2,
       "permissions": [
         "admin",
         "manager",
