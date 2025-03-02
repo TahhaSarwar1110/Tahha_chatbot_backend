@@ -1,57 +1,135 @@
 {
-    "intents": {
-        "add_employee": {
-            "keywords": ["add", "new", "establish", "bring", "grant system access", "team", "setup", "account", "register", "assign employee to department", "staff", "profile", "assign new employee to department", "hire", "system", "access", "input", "create", "grant"],
-            "required": ["employee", "staff", "team", "member", "hire", "user"],
-            "threshold": 1,
-            "permissions": ["admin", "manager", "supervisor", "scheduler"],
-            "response": {
-                "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
-                "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
-            }
-        },
-        "assign_position": {
-            "keywords": ["assign position", "assign role", "assign designation", "set a position", "update position", "change position", "how do I assign a position"],
-            "required": ["assign", "position", "role", "designation", "title", "department", "reassign", "move"],
-            "threshold": 0,
-            "permissions": ["scheduler"],
-            "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
-        },
-        "missing_add_employee_button": {
-            "keywords": [
-                      "unable to see", "unable to find",  "do not see", "do not find", "don't see", "dont see", "dont find", "don't find", "have not seen", "have not found", "haven't found", "haven't seen", "havent seen", "havent found", "not seeing", "can't see", "can't find", "don't find", "cant see", "cant find", "cannot see", "cannot find", "missing", "disappeared", "option not available", "not visible"],
-            "required": ["add", "employee", "button", "option"],
-            "threshold": 1,
-            "permissions": ["admin", "manager", "supervisor", "scheduler"],
-            "response": {
-                "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
-                "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
-            }
-        },
-        "general": {
-            "keywords": [],
-            "response": "I’m not sure how to help with that yet. Could you provide more details?"
-        }
+  "intents": {
+    "add_employee": {
+      "keywords": [
+        "add",
+        "new",
+        "establish",
+        "bring",
+        "grant system access",
+        "team",
+        "setup",
+        "account",
+        "register",
+        "assign employee",
+        "staff",
+        "profile",
+        "hire",
+        "system",
+        "access",
+        "input",
+        "create",
+        "grant"
+      ],
+      "required": [
+        "employee",
+        "staff",
+        "team",
+        "member",
+        "hire",
+        "user"
+      ],
+      "threshold": 1,
+      "permissions": [
+        "admin",
+        "manager",
+        "supervisor",
+        "scheduler"
+      ],
+      "response": {
+        "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
+        "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+      }
     },
-    "roles": {
-        "accountant": "Accountant.pdf",
-        "employee with scheduling(individual management) rights": "Employee with Scheduling(Individual Management)Rights.pdf",
-        "schedule viewer": "Schedule viewer.pdf",
-        "employee": "Employee.pdf",
-        "supervisor": "Supervisor.pdf",
-        "manager": "Manager.pdf",
-        "scheduler": "Scheduler.pdf",
-        "admin": "Admin.pdf"
+    "assign_position": {
+      "keywords": [
+        "assign position",
+        "assign role",
+        "assign designation",
+        "set a position",
+        "update position",
+        "change position",
+        "how do I assign a position"
+      ],
+      "required": [
+        "position"
+      ],
+      "threshold": 1,
+      "permissions": [
+        "scheduler"
+      ],
+      "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
     },
-    "special_cases": {
-        "mobile": "Please reach out to management",
-        "dont see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
-        "dont see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
-        "can't see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
-        "can't see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
-        "cannot find the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level.",
-        "cannot see the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level."
- 
+    "missing_add_employee_button": {
+      "keywords": [
+        "unable to see",
+        "unable to find",
+        "do not see",
+        "do not find",
+        "don't see",
+        "dont see",
+        "dont find",
+        "don't find",
+        "have not seen",
+        "have not found",
+        "haven't found",
+        "haven't seen",
+        "havent seen",
+        "havent found",
+        "not seeing",
+        "can't see",
+        "can't find",
+        "don't find",
+        "cant see",
+        "cant find",
+        "cannot see",
+        "cannot find",
+        "missing",
+        "disappeared",
+        "option not available",
+        "not visible"
+      ],
+      "required": [
+        "add",
+        "employee",
+        "button",
+        "option"
+      ],
+      "threshold": 1,
+      "permissions": [
+        "admin",
+        "manager",
+        "supervisor",
+        "scheduler"
+      ],
+      "response": {
+        "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+        "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
+      }
     },
-    "vector_store_dir": "./vector_stores"
+    "general": {
+      "keywords": [],
+      "response": "I’m not sure how to help with that yet. Could you provide more details?"
+    }
+  },
+  "roles": {
+    "accountant": "Accountant.pdf",
+    "employee with scheduling(individual management) rights": "Employee with Scheduling(Individual Management)Rights.pdf",
+    "schedule viewer": "Schedule viewer.pdf",
+    "employee": "Employee.pdf",
+    "supervisor": "Supervisor.pdf",
+    "manager": "Manager.pdf",
+    "scheduler": "Scheduler.pdf",
+    "admin": "Admin.pdf"
+  },
+  "special_cases": {
+    "mobile": "Please reach out to management",
+    "dont see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
+    "dont see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+    "can't see option": "If you do not see the option in question, it may mean you lack the necessary permissions. Please contact your administrator or manager for assistance.",
+    "can't see option to add employee": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
+    "cannot find the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level.",
+    "cannot see the add employee button": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level."
+  },
+  "vector_store_dir": "./vector_stores"
 }
