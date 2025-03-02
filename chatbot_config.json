@@ -35,7 +35,7 @@
         "hires",
         "users"
       ],
-      "threshold": 1,
+      "threshold": 2,
       "permissions": [
         "admin",
         "manager",
