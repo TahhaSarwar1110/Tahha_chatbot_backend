@@ -78,10 +78,11 @@
         "not visible"
       ],
       "required": [
-        "add",
-        "employee",
+        "add employee button,
+        "add employee button option",
         "button",
-        "option"
+        "option",
+        "add employee"
       ],
       "threshold": 1,
       "permissions": [
