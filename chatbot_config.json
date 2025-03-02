@@ -12,11 +12,12 @@
         "input new team members in the platform",
         "set up a new employee's account",
         "specific form or section to add a new hire",
-        "grant system access",
         "add a new user",
         "added"
       
       ],
+      
+      
       "required": ["employee",
         "staff",
         "team",
