@@ -59,25 +59,6 @@
         "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
       }
     },
-    "assign_position": {
-      "keywords": [
-        "assign position",
-        "assign role",
-        "assign designation",
-        "set a position",
-        "update position",
-        "change position",
-        "how do I assign a position"
-      ],
-      "required": [
-        "position"
-      ],
-      "threshold": 0,
-      "permissions": [
-        "scheduler"
-      ],
-      "response": "Only schedulers are allowed to assign positions or move employees to a new department. Please contact your scheduler for assistance."
-    },
     "missing_add_employee_button": {
       "keywords": [
         "unable to see",
