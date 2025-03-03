@@ -6,7 +6,7 @@
         "setup", "account", "register", "staff", "profile", "hire", "system",
         "access", "input", "create", "grant"
       ],
-      "required": ["employee", "staff", "team", "member", "hire", "user", "new employee"],
+      "required": ["employee", "staff", "new staff", "team", "member", "new member", "hire", "new hire", "user", "new user", "new employee"],
       "threshold": 2,
       "permissions": ["admin", "manager", "supervisor", "scheduler"],
       "response": {
