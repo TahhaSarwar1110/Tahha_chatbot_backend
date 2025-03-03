@@ -1,56 +1,30 @@
-"intents": {
-        "add_employee": {
-            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
-            "required": ["employee", "staff", "team", "member", "hire", "user"],
-            "threshold": 2,
-            "permissions": ["admin", "manager", "supervisor", "scheduler"],
-            "response": {
-                "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
-                "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
-            },
+{
+  "intents": {
+    "add_employee": {
+      "keywords": [
+        "add", "new", "establish", "employee", "grant system access", "team",
+        "setup", "account", "register", "staff", "profile", "hire", "system",
+        "access", "input", "create", "grant"
+      ],
+      "required": ["employee", "staff", "team", "member", "hire", "user"],
+      "threshold": 2,
+      "permissions": ["admin", "manager", "supervisor", "scheduler"],
+      "response": {
+        "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
+        "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+      }
+    },
     "missing_add_employee_button": {
       "keywords": [
-        "unable to see",
-        "unable to find",
-        "do not see",
-        "do not find",
-        "don't see",
-        "dont see",
-        "dont find",
-        "don't find",
-        "have not seen",
-        "have not found",
-        "haven't found",
-        "haven't seen",
-        "havent seen",
-        "havent found",
-        "not seeing",
-        "can't see",
-        "can't find",
-        "don't find",
-        "cant see",
-        "cant find",
-        "cannot see",
-        "cannot find",
-        "missing",
-        "disappeared",
-        "option not available",
-        "not visible"
+        "unable to see", "unable to find", "do not see", "do not find", "don't see",
+        "dont see", "dont find", "don't find", "have not seen", "have not found",
+        "haven't found", "haven't seen", "havent seen", "havent found", "not seeing",
+        "can't see", "can't find", "don't find", "cant see", "cant find", "cannot see",
+        "cannot find", "missing", "disappeared", "option not available", "not visible"
       ],
-      "required": [
-        "add employee button",
-        "add employee button option",
-        "button",
-        "option",
-        "add employee"
-      ],
+      "required": ["add employee button", "add employee button option", "button", "option", "add employee"],
       "threshold": 2,
-      "permissions": [
-        "admin",
-        "manager",
-        "supervisor",
-        "scheduler"
-      ],
+      "permissions": ["admin", "manager", "supervisor", "scheduler"],
       "response": {
         "default": "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. You must have manager, admin, supervisor, or scheduler access privileges to add employees. Please contact an Admin or Manager.",
         "no_permission_option": "It seems you don't have the necessary permissions to add employees. Please check with your administrator or manager for access."
