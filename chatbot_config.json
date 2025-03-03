@@ -2,10 +2,11 @@
   "intents": {
     "add_employee": {
       "keywords": [
-        "add a new", "to bring a new", "give system access", "officially add someone", "set up a new", "register a new ", "correct way to ",
-         "input new team members", "create an employee", "specific form or section to ", "step-by-step process for", "add a new user", "add a staff"
+        "add", "new", "establish", "employee", "grant system access", "team",
+        "setup", "account", "register", "staff", "profile", "hire", "system",
+        "access", "input", "create", "grant"
       ],
-      "required": ["employee", "staff", "team", "member", "hire", "user", "employee account",  "staff member", "add an employee", "profile", "add a new hire"],
+      "required": ["employee", "staff", "team", "member", "hire", "user"],
       "threshold": 2,
       "permissions": ["admin", "manager", "supervisor", "scheduler"],
       "response": {
