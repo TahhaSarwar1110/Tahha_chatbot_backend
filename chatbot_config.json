@@ -2,7 +2,7 @@
   "intents": {
     "add_employee": {
       "keywords": [
-        "add a new employee", "to bring a new employee", "establish", "give system access", "officially add someone", "set up a new employee account", "register a new staff member, "correct way to add an employee",
+        "add a new employee", "to bring a new employee", "give system access", "officially add someone", "set up a new employee account", "register a new staff member", "correct way to add an employee",
          "input new team members", "create an employee profile", "specific form or section to add a new hire", "step-by-step process for adding a new team member", "add a new user", "add a staff"
       ],
       "required": ["employee", "staff", "team", "member", "hire", "user"],
