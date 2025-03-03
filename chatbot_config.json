@@ -2,7 +2,7 @@
   "intents": {
     "add_employee": {
       "keywords": [
-        "add", "establish", "grant system access", "team",
+        "add", "establish", "grant system access", "team", "new",
         "setup", "account", "register", "staff", "profile", "hire", "system",
         "access", "input", "create", "grant"
       ],
