@@ -4,7 +4,7 @@
       "keywords": [
         "add", "establish", "grant system access", "team", "new",
         "setup", "account", "register", "staff", "profile", "hire", "system",
-        "access", "input", "create", "grant", "bring", "give system access",
+        "access", "input", "create", "grant", "bring", "give system access"
       ],
       "required": ["employees", "new employee", "an employee", "staff", "new staff", "members", "new members", "member", "new member", "hire", "new hire", "user", "new user", "new employees", "someone"],
       "threshold": 2,
