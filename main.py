@@ -18,90 +18,63 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters.character import CharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 
-# ------------------------------------
-# Load Environment Variables
-# ------------------------------------
-
+# Load environment variables
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
     raise RuntimeError("❌ ERROR: OPENAI_API_KEY is missing.")
 
-# ------------------------------------
 # Initialize FastAPI
-# ------------------------------------
-
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# ------------------------------------
-# Define Request Model
-# ------------------------------------
-
+# Define request model
 class ChatRequest(BaseModel):
-    role: str = ""  
+    role: str = ""  # Allow empty role initially
     message: str
 
-# ------------------------------------
-# Load Configuration
-# ------------------------------------
-
+# Load config
 CONFIG_PATH = "chatbot_config.json"
 if not os.path.exists(CONFIG_PATH):
     raise RuntimeError(f"❌ ERROR: Config file '{CONFIG_PATH}' not found.")
-
 with open(CONFIG_PATH, "r") as f:
     config = json.load(f)
 
-# ------------------------------------
-# Initialize Conversation Memory
-# ------------------------------------
-
+# Initialize conversation memory with additional context for role
 chat_memory = ConversationSummaryMemory(
     llm=ChatOpenAI(openai_api_key=openai_api_key),
     memory_key='message_log'
 )
 
-# ------------------------------------
-# Initialize Embeddings
-# ------------------------------------
-
+# Initialize embeddings
 embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
 
-# ------------------------------------
-# Build Vector Stores Dynamically
-# ------------------------------------
-
+# Build vector stores dynamically
 vector_stores = {}
 for role, file_path in config["roles"].items():
     if not os.path.exists(file_path):
         print(f"⚠️ WARNING: '{file_path}' not found for role '{role}'. Skipping.")
         continue
-
     loader = PyPDFLoader(file_path)
     documents = loader.load()
     splitter = CharacterTextSplitter(separator=".", chunk_size=1000, chunk_overlap=100)
     split_docs = splitter.split_documents(documents)
-
     for doc in split_docs:
-        doc.page_content = ' '.join(doc.page_content.split())  
-
+        doc.page_content = ' '.join(doc.page_content.split())
     vector_stores[role] = Chroma.from_documents(
         embedding=embedding,
         documents=split_docs,
         persist_directory=f"{config['vector_store_dir']}/{role}"
     )
 
-# ------------------------------------
-# Define Prompt Template
-# ------------------------------------
-
+# Define prompt template
 TEMPLATE = """
 Precisely answer the question based on the provided context from the user's role-specific document.
-If the answer is not in the context, respond: "Please reach out to your management for assistance."
+If the answer is not in the context, respond: "Please reach out to your managment for the assistance"
 Avoid hallucinating or guessing.
-If the user cannot find an option or button, respond: "You may not have the necessary permissions."
-If the query is related to any error, ask for further details.
+If the user cannot find the option, or button, or add employee button or add employee option, the AI should respond: You may not have the necessary permissions.
+If the user cannot find the option, or button, or add employee button,or add employee option, the AI should respond: You may not have the necessary permissions.
+The AI should ask for further details if the query is related to any error.
 
 Current Conversation:
 {message_log}
@@ -115,21 +88,13 @@ Human:
 AI:
 {must_action}
 """
-
 prompt_template = PromptTemplate.from_template(TEMPLATE)
 
-# ------------------------------------
-# Initialize Chat Model
-# ------------------------------------
-
+# Initialize ChatOpenAI
 chat = ChatOpenAI(model="gpt-4-turbo", temperature=0.2, max_tokens=500, openai_api_key=openai_api_key)
 
-# ------------------------------------
-# Intent & Method Detection
-# ------------------------------------
-
+# Dynamic intent detection
 def detect_intent(user_input: str) -> str:
-    """ Detects the most relevant intent based on input keywords. """
     user_input = user_input.lower().strip()
     best_intent = "general"
     highest_score = -1
@@ -137,7 +102,6 @@ def detect_intent(user_input: str) -> str:
     for intent, intent_config in config["intents"].items():
         if intent == "general":
             continue
-
         input_words = set(user_input.split())
         intent_keywords = set(intent_config["keywords"])
         required_keywords = set(intent_config.get("required", []))
@@ -154,55 +118,113 @@ def detect_intent(user_input: str) -> str:
     
     return best_intent
 
+# Check if user is specifying a method
 def detect_method(user_input: str) -> str:
-    """ Detects which method the user is selecting. """
     user_input = user_input.lower().strip()
     methods = {
         "employee button": ["employee button", "using employee button", "button"],
         "detailed form": ["detailed form", "using detailed form", "form"],
         "import csv": ["import csv", "csv", "import csv files", "csv files"]
     }
-
     for method, keywords in methods.items():
         if any(keyword in user_input for keyword in keywords):
             return method
     return None
 
-def check_employee_method_selected(conversation_history: str) -> bool:
-    """ Checks if the user has already selected a method to avoid repeating the question. """
-    selected_methods = ["using employee button", "using detailed form", "import csv"]
-    return any(method in conversation_history.lower() for method in selected_methods)
+# Extract role from conversation history
+def get_stored_role(conversation_history: str) -> str:
+    for line in conversation_history.split('\n'):
+        if "Your role is set to" in line:
+            return line.split("Your role is set to")[1].strip().replace(".", "").lower()
+            return role
+    return None
 
-# ------------------------------------
-# Core Response Logic
-# ------------------------------------
-
+# Core response generation
 def generate_response(user_input: str, user_role: str) -> str:
-    """ Generates the chatbot's response based on intent detection and role-specific context. """
+    # Load conversation history
     memory_vars = chat_memory.load_memory_variables({})
     conversation_history = memory_vars.get('message_log', '')
 
-    if "add_employee" in conversation_history and check_employee_method_selected(conversation_history):
-        response = "You have already selected a method. If you need further assistance, let me know."
+    # Check if this is the start of the conversation
+    if not conversation_history and (not user_role or user_role not in vector_stores):
+        response = "Hi! What’s your role? (e.g., admin, manager, accountant)"
         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
         return response
 
-    intent = detect_intent(user_input)
+    # If role isn’t provided, check if it’s stored in memory
+    stored_role = get_stored_role(conversation_history) if not user_role else user_role
+    if not stored_role and user_role not in vector_stores:
+        # User might be responding with their role
+        potential_role = user_input.lower().strip()
+        if potential_role in vector_stores:
+            response = f"Your role is set to {potential_role}. How can I assist you now?"
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+        else:
+            response = "That’s not a valid role. Please specify a valid role (e.g., admin, manager, accountant)."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+    
+    # Use stored role if user_role is empty but role was previously set
+    effective_role = stored_role if not user_role else user_role
+    effective_role = effective_role.lower().strip()
+    
+    if effective_role not in vector_stores:
+        response = f"Role '{effective_role}' is not supported. Please specify a valid role (e.g., admin, manager, accountant)."
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
 
+    # Handle special cases
+
+
+    visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
+    add_employee_triggers = ["add employee", "employee button", "employee option"]
+    permission_response = (
+        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
+        "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
+        "Please contact an Admin or Manager."
+)
+
+    for trigger, response in config.get("special_cases", {}).items():
+        user_lower = user_input.lower()
+        # Check visibility + add_employee combos first
+        if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
+            return permission_response
+        if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
+            # Special handling for assign_position intent
+            assign_keywords = ["assign", "set", "update", "change"]
+            position_keywords = ["position", "role", "designation"]
+            if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
+            # Check role from conversation history or request
+                effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
+                if effective_role == "scheduler":
+                    assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
+                else:
+                    assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
+                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
+                return assign_response
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+
+   
+
+    # Detect intent
+    intent = detect_intent(user_input)
+    intent_config = config["intents"].get(intent, config["intents"]["general"])
+
+    # Check for method specification in follow-up
     method = detect_method(user_input)
     if method and "add_employee" in conversation_history:
-        retriever = vector_stores[user_role].as_retriever(
-            search_type='similarity_score_threshold', search_kwargs={'k': 3, 'score_threshold': 0.65}
-        )
-
+        retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 3, 'score_threshold': 0.65})
         method_query = f"Steps to add an employee using {method}"
         retrieved_docs = retriever.invoke(method_query)
         context = "\n".join([doc.page_content for doc in retrieved_docs])
-
+        
         if not context.strip():
-            response = "I couldn't find specific steps for this method. Please clarify your query."
+            response = "The provided document does not contain detailed steps for this method. Please clarify your query."
         else:
-            must_action = "Activate Employee profile! Go to 'Staff' > 'Not Activated' and activate the profile."
+            must_action = "Activate Employee profile!\nOnce you have created the employee profile, the next step is to activate it. In the 'Staff' tab, click on 'Not Activated' to view the profile, then click 'Send Activation E-mail Now'. If an email address is provided, the employee will receive a welcome email with activation instructions. Alternatively, manually activate by clicking 'Manually Activate All' and ensure you create a username and password."
             response_chain = (
                 RunnablePassthrough.assign(
                     message_log=RunnableLambda(lambda _: conversation_history),
@@ -213,27 +235,54 @@ def generate_response(user_input: str, user_role: str) -> str:
                 | chat
                 | StrOutputParser()
             )
-
             response = response_chain.invoke({
                 "question": method_query,
                 "context": context,
                 "message_log": conversation_history
             })
-
         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
         return response
 
-    if intent == "add_employee":
+    # Handle intent with permissions
+    if "permissions" in intent_config:
+        if effective_role not in intent_config["permissions"]:
+            response = f"As a {effective_role}, you do not have permission to {intent.replace('_', ' ')}. Please contact an Admin or Manager."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+        
+        # Offer the three methods for permitted roles
         response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
         return response
+    
+    # General intent: Use role-specific document context
+    retriever = vector_stores[effective_role].as_retriever(search_type='similarity_score_threshold', search_kwargs={'k': 3, 'score_threshold': 0.65})
+    retrieved_docs = retriever.invoke(user_input)
+    context = "\n".join([doc.page_content for doc in retrieved_docs])
+    
+    if not context.strip():
+        response = "The provided document does not contain this information. Please clarify your query."
+    else:
+        response_chain = (
+            RunnablePassthrough.assign(
+                message_log=RunnableLambda(lambda _: conversation_history),
+                context=RunnablePassthrough(),
+                must_action=RunnableLambda(lambda _: "")
+            )
+            | prompt_template
+            | chat
+            | StrOutputParser()
+        )
+        response = response_chain.invoke({
+            "question": user_input,
+            "context": context,
+            "message_log": conversation_history
+        })
+    
+    chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+    return response
 
-    return "I'm not sure how to help with that yet. Could you provide more details?"
-
-# ------------------------------------
-# API Endpoints
-# ------------------------------------
-
+# Endpoints
 @app.get("/")
 def read_root():
     return {"message": "FastAPI Chatbot is running."}
