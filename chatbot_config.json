@@ -2,7 +2,11 @@
   "intents": {
     "add_employee": {
       "keywords": [
-      "add", "new", "register", "create", "steps", "bring", "give system access", "input", "set up", "specific form or section", "grant system access", "step-by-step process"  
+      
+        "add", "establish", "grant system access", "team", "new",
+        "setup", "account", "register", "staff", "profile", "hire", "system",
+        "access", "input", "create", "grant", "bring", "give system access"
+  
       ],
       "required": ["employee", "staff", "member", "hire", "user", "someone", "employees", "members", "hires", "users"],
       "threshold": 1,
