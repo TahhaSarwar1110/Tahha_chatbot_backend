@@ -178,22 +178,25 @@ def generate_response(user_input: str, user_role: str) -> str:
 
     
 
+   
+
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
     add_employee_triggers = ["add employee", "employee button", "employee option"]
     permission_response = (
         "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
-        "You must have manager, admin, supervisor, or scheduler access privileges to add employees. "
+        "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
         "Please contact an Admin or Manager."
     )
-
+    
     for trigger, response in config.get("special_cases", {}).items():
         user_lower = user_input.lower()
         # Intercept shift/leave/request queries to avoid add_employee misfire
         unrelated_keywords = ["shift", "leave", "request"]
         employee_related = ["employee", "staff", "team", "member", "hire", "user"]
         if any(k in user_lower for k in unrelated_keywords) and any(e in user_lower for e in employee_related):
-            # Avoid overlap with legitimate add_employee queries
-            if not any(a in user_lower for a in ["add", "create an employee", "new employee profile", "register"]):
+            # Refined overlap check: require explicit "add employee" intent
+            add_employee_specific = ["add employee", "add an employee", "add a new employee", "create an employee profile", "register a new employee"]
+            if not any(a in user_lower for a in add_employee_specific):
                 clarification_response = "The provided document does not contain information about shifts, leaves, or requests yet. Please clarify your query or contact your administrator for assistance."
                 chat_memory.save_context(inputs={"input": user_input}, outputs={"output": clarification_response})
                 return clarification_response
@@ -214,8 +217,7 @@ def generate_response(user_input: str, user_role: str) -> str:
                 return assign_response
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
             return response
-  
-   
+       
 
     # Detect intent
     intent = detect_intent(user_input)
