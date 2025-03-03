@@ -1,46 +1,13 @@
-{
-  "intents": {
-    "add_employee": {
-      "keywords": [
-        "add a new employee to my team ",
-        "go to register a new staff member",
-        "create an employee profile in the system?",
-        "officially add someone to my team",
-        "grant system access",
-        "steps to follow to bring a new employee into the system",
-        "correct way to add an employee under my management",
-        "input new team members in the platform",
-        "set up a new employee's account",
-        "specific form or section to add a new hire",
-        "add a new user",
-        "added"
-      
-      ],
-      
-      
-      "required": ["employee",
-        "staff",
-        "team",
-        "member",
-        "hire",
-        "user",
-        "employees",
-        "staff members",
-        "team members",
-        "hires",
-        "users"],
-      "threshold": 2,
-      "permissions": [
-        "admin",
-        "manager",
-        "supervisor",
-        "scheduler"
-      ],
-      "response": {
-        "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
-        "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
-      }
-    },
+"intents": {
+        "add_employee": {
+            "keywords": ["add", "new", "establish", "employee", "grant system access", "team", "setup", "account", "register", "staff", "profisle", "hire", "system", "access", "input", "create", "grant"],
+            "required": ["employee", "staff", "team", "member", "hire", "user"],
+            "threshold": 2,
+            "permissions": ["admin", "manager", "supervisor", "scheduler"],
+            "response": {
+                "default": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use.",
+                "no_permission_option": "If you do not see the option to add an employee, it means you don’t have the necessary permission. Please contact your administrator or manager for access."
+            },
     "missing_add_employee_button": {
       "keywords": [
         "unable to see",
