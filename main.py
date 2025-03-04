@@ -177,52 +177,58 @@ def generate_response(user_input: str, user_role: str) -> str:
     # Handle special cases
 
 
-          
-       visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
-        add_employee_triggers = ["add employee", "employee button", "employee option"]
-        permission_response = (
-            "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
-            "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
-            "Please contact an Admin or Manager."
-        )
-        
-        for trigger, response in config.get("special_cases", {}).items():
-            user_lower = user_input.lower()
-            # Intercept all provided phrases to trigger add_employee response
-            add_employee_phrases = [
-               "how do i enroll a new employee", "how to register a new staff member", "how do i initiate an employee profile", "best way to set up a new hire", "how do i create a user account for a new employee", "list steps to add a new team member", "how to provide system access to a new joiner", "ways to onboard a new worker", "how to set up an account for a newly hired staff", "how to input a new worker's details", "guide to registering a new employee", "official process for adding a new hire", "steps to create a user profile for a new employee", "how do i get a new hire into the system", "how to enter a new employee in the database"
-                "give system access to an employee", "add a new employee", "register a new member", "create an employee profile",
-                "officially add someone to my team in humanity", "steps do i follow to bring a new employee into the system",
-                "give system access", "correct way to add an employee", "input new team members", "set up a new employee's account",
-                "specific form or section to add a new hire", "grant system access", "assign a new employee to department",
-                "step-by-step process for adding a new team member", "add a new user", "add a staff", "guide steps for adding a new team member",
-                "how do i set up a staff member account", "how to add a team member", "how do i create a member profile",
-                "please list out the methods to create new employee profiles", "how can i onboard a new team member",
-                "what are the ways to add a new employee", "different methods to create an employee profile"
-            ]
-            if any(phrase in user_lower for phrase in add_employee_phrases):
-                response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-                return response
-            # Check visibility + add_employee combos
-            if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
-                return permission_response
-            if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
-                assign_keywords = ["assign", "set", "update", "change"]
-                position_keywords = ["position", "role", "designation"]
-                if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
-                    effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
-                    if effective_role == "scheduler":
-                        assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
-                    else:
-                        assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
-                    chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
-                    return assign_response
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-                return response
-
+    visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
+    add_employee_triggers = ["add employee", "employee button", "employee option"]
+    permission_response = (
+        "If you do not see the 'Add Employee' option or button, it means you do not have the necessary permission level. "
+        "You must have manager, admin, supervisor, or scheduler access privileges in Humanity to add employees. "
+        "Please contact an Admin or Manager."
+    )
+    
+    for trigger, response in config.get("special_cases", {}).items():
+        user_lower = user_input.lower()
+        # Intercept all provided phrases to trigger add_employee response
+        add_employee_phrases = [
+            "give system access to an employee",	
+            "add a new employee",
+            "register a new member",
+            "create an employee profile",
+            "officially add someone to my team in humanity",
+            "steps do i follow to bring a new employee into the system",
+            "give system access",
+            "correct way to add an employee",
+            "input new team members",
+            "set up a new employee's account",
+            "specific form or section to add a new hire",
+            "grant system access",
+            "assign a new employee to department",
+            "step-by-step process for adding a new team member",
+            "add a new user",
+            "add a staff"
+        ]
+        if any(phrase in user_lower for phrase in add_employee_phrases):
+            response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
+        # Check visibility + add_employee combos
+        if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
+            return permission_response
+        if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
+            assign_keywords = ["assign", "set", "update", "change"]
+            position_keywords = ["position", "role", "designation"]
+            if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
+                effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
+                if effective_role == "scheduler":
+                    assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
+                else:
+                    assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
+      ` chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
+                return assign_response
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
    
+       
 
     # Detect intent
     intent = detect_intent(user_input)
