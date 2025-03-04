@@ -177,7 +177,12 @@ def generate_response(user_input: str, user_role: str) -> str:
     # Handle special cases
 
 
+      
     from fuzzywuzzy import fuzz
+    from sentence_transformers import SentenceTransformer, util
+    
+    # Load a pre-trained model for semantic similarity
+    semantic_model = SentenceTransformer("all-MiniLM-L6-v2")
     
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
     add_employee_triggers = ["add employee", "employee button", "employee option"]
@@ -195,23 +200,43 @@ def generate_response(user_input: str, user_role: str) -> str:
                 "officially add someone to my team in humanity", "steps do i follow to bring a new employee into the system",
                 "give system access", "correct way to add an employee", "input new team members", "set up a new employee's account",
                 "specific form or section to add a new hire", "grant system access", "assign a new employee to department",
-                "step-by-step process for adding a new team member", "add a new user", "add a staff", "guide steps for adding a new team member"
+                "step-by-step process for adding a new team member", "add a new user", "add a staff", "guide steps for adding a new team member",
+                "how do i set up a staff member account", "how to add a team member", "how do i create a member profile",
+                "please list out the methods to create new employee profiles", "how can i onboard a new team member",
+                "what are the ways to add a new employee", "different methods to create an employee profile"
             ],
             "response": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
         }
     }
+    
+    # Must Action that should always be included when applicable
+    must_action_message = (
+        "**Must Action:** Activate Employee profile! Once you have created the employee profile, the next step is to activate it. "
+        "In the 'Staff' tab, click on 'Not Activated' to view the profile, then click 'Send Activation E-mail Now'. "
+        "If an email address is provided, the employee will receive a welcome email with activation instructions. "
+        "Alternatively, manually activate by clicking 'Manually Activate All' and ensure you create a username and password."
+    )
     
     def normalize_text(text):
         return re.sub(r'[^a-zA-Z0-9\s]', '', text.lower())
     
     def get_intent(user_input):
         user_input = normalize_text(user_input)
+        user_embedding = semantic_model.encode(user_input, convert_to_tensor=True)
+        
+        best_intent = None
+        highest_score = 0.0
         
         for intent, data in intent_responses.items():
-            for phrase in data["phrases"]:
-                if fuzz.partial_ratio(user_input, phrase) > 85:
-                    return intent
-        return None
+            phrase_embeddings = semantic_model.encode(data["phrases"], convert_to_tensor=True)
+            similarity_scores = util.pytorch_cos_sim(user_embedding, phrase_embeddings).squeeze()
+            max_score = similarity_scores.max().item()
+            
+            if max_score > highest_score and max_score > 0.75:  # Set threshold for confidence
+                highest_score = max_score
+                best_intent = intent
+        
+        return best_intent
     
     def process_user_query(user_input):
         user_lower = normalize_text(user_input)
@@ -241,7 +266,7 @@ def generate_response(user_input: str, user_role: str) -> str:
                 
                 chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
                 return response
-    
+
        
    
 
