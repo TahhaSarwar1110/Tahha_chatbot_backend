@@ -6,7 +6,7 @@
         "give system access"
   
       ],
-      "required": [],
+      "required": ["employee", "staff", "member", "hire", "user", "someone", "employees", "members", "hires", "users"],
       "threshold": 1,
       "permissions": ["admin", "manager", "supervisor", "scheduler"],
       "response": {
