@@ -9,3 +9,4 @@ fastapi
 chromadb
 fuzzywuzzy
 python-Levenshtein
+sentence-transformers
