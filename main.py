@@ -176,6 +176,9 @@ def generate_response(user_input: str, user_role: str) -> str:
 
     # Handle special cases
 
+       
+    from fuzzywuzzy import fuzz
+    
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
     add_employee_triggers = ["add employee", "employee button", "employee option"]
     permission_response = (
@@ -184,48 +187,60 @@ def generate_response(user_input: str, user_role: str) -> str:
         "Please contact an Admin or Manager."
     )
     
-    for trigger, response in config.get("special_cases", {}).items():
-        user_lower = user_input.lower()
-        # Intercept all provided phrases to trigger add_employee response
-        add_employee_phrases = [
-            "give system access to an employee",
-            "add a new employee",
-            "register a new member",
-            "create an employee profile",
-            "officially add someone to my team in humanity",
-            "steps do i follow to bring a new employee into the system",
-            "give system access",
-            "correct way to add an employee",
-            "input new team members",
-            "set up a new employee's account",
-            "specific form or section to add a new hire",
-            "grant system access",
-            "assign a new employee to department",
-            "step-by-step process for adding a new team member",
-            "add a new user",
-            "add a staff"
-        ]
-        if any(phrase in user_lower for phrase in add_employee_phrases):
-            response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+    # Define intent phrases and their responses
+    intent_responses = {
+        "add_employee": {
+            "phrases": [
+                "give system access to an employee", "add a new employee", "register a new member", "create an employee profile",
+                "officially add someone to my team in humanity", "steps do i follow to bring a new employee into the system",
+                "give system access", "correct way to add an employee", "input new team members", "set up a new employee's account",
+                "specific form or section to add a new hire", "grant system access", "assign a new employee to department",
+                "step-by-step process for adding a new team member", "add a new user", "add a staff", "guide steps for adding a new team member"
+            ],
+            "response": "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+        }
+    }
+    
+    def normalize_text(text):
+        return re.sub(r'[^a-zA-Z0-9\s]', '', text.lower())
+    
+    def get_intent(user_input):
+        user_input = normalize_text(user_input)
+        
+        for intent, data in intent_responses.items():
+            for phrase in data["phrases"]:
+                if fuzz.partial_ratio(user_input, phrase) > 85:
+                    return intent
+        return None
+    
+    def process_user_query(user_input):
+        user_lower = normalize_text(user_input)
+        intent = get_intent(user_input)
+        
+        if intent and intent in intent_responses:
+            response = intent_responses[intent]["response"]
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
             return response
-        # Check visibility + add_employee combos
+        
         if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
             return permission_response
-        if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
-            assign_keywords = ["assign", "set", "update", "change"]
-            position_keywords = ["position", "role", "designation"]
-            if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
-                effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
-                if effective_role == "scheduler":
-                    assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
-                else:
-                    assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
-                return assign_response
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-            return response
+        
+        for trigger, response in config.get("special_cases", {}).items():
+            if re.search(r'\b' + re.escape(trigger) + r'\b', user_lower, re.IGNORECASE):
+                assign_keywords = ["assign", "set", "update", "change"]
+                position_keywords = ["position", "role", "designation"]
+                if any(a in user_lower for a in assign_keywords) and any(p in user_lower for p in position_keywords):
+                    effective_role = get_stored_role(chat_memory.load_memory_variables({}).get('message_log', '')) or ""
+                    if effective_role == "scheduler":
+                        assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
+                    else:
+                        assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
+                    chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
+                    return assign_response
+                
+                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+                return response
 
     # Detect intent
     intent = detect_intent(user_input)
