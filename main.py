@@ -223,10 +223,10 @@ def generate_response(user_input: str, user_role: str) -> str:
                     assign_response = "Only schedulers can assign positions. As a scheduler, please provide the employee’s name and desired position for further assistance."
                 else:
                     assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
-      ` chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
+      `             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
                 return assign_response
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-            return response
+                    chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+                return response
    
        
 
