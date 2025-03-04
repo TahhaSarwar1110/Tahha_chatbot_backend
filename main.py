@@ -176,7 +176,7 @@ def generate_response(user_input: str, user_role: str) -> str:
 
     # Handle special cases
 
-       
+
     from fuzzywuzzy import fuzz
     
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
@@ -241,6 +241,9 @@ def generate_response(user_input: str, user_role: str) -> str:
                 
                 chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
                 return response
+    
+       
+   
 
     # Detect intent
     intent = detect_intent(user_input)
