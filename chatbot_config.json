@@ -3,12 +3,10 @@
     "add_employee": {
       "keywords": [
       
-        "add", "establish", "grant system access", "team",
-        "setup", "account", "register", "profile", "hire", "system",
-        "access", "input", "create", "grant", "bring", "give system access"
+        "give system access"
   
       ],
-      "required": ["employee", "staff", "member", "hire", "user", "someone", "employees", "members", "hires", "users"],
+      "required": [],
       "threshold": 1,
       "permissions": ["admin", "manager", "supervisor", "scheduler"],
       "response": {
