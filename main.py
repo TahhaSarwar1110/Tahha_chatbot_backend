@@ -176,10 +176,6 @@ def generate_response(user_input: str, user_role: str) -> str:
 
     # Handle special cases
 
-    
-
-   
-
     visibility_triggers = ["dont see", "cant see", "not see", "cant find", "dont find", "havent seen", "havent found", "unable to find"]
     add_employee_triggers = ["add employee", "employee button", "employee option"]
     permission_response = (
@@ -190,16 +186,29 @@ def generate_response(user_input: str, user_role: str) -> str:
     
     for trigger, response in config.get("special_cases", {}).items():
         user_lower = user_input.lower()
-        # Intercept shift/leave/request queries to avoid add_employee misfire
-        unrelated_keywords = ["shift", "leave", "request"]
-        employee_related = ["employee", "staff", "team", "member", "hire", "user"]
-        if any(k in user_lower for k in unrelated_keywords) and any(e in user_lower for e in employee_related):
-            # Refined overlap check: require explicit "add employee" intent
-            add_employee_specific = ["add employee", "add an employee", "add a new employee", "create an employee profile", "register a new employee"]
-            if not any(a in user_lower for a in add_employee_specific):
-                clarification_response = "The provided document does not contain information about shifts, leaves, or requests yet. Please clarify your query or contact your administrator for assistance."
-                chat_memory.save_context(inputs={"input": user_input}, outputs={"output": clarification_response})
-                return clarification_response
+        # Intercept all provided phrases to trigger add_employee response
+        add_employee_phrases = [
+            "give system access to an employee",
+            "add a new employee",
+            "register",
+            "create an employee profile",
+            "officially add someone to my team in humanity",
+            "steps to follow to bring a new employee into the system",
+            "give system access",
+            "correct way to add an employee",
+            "input new team members",
+            "set up a new employee's account",
+            "specific form or section to add a new hire",
+            "grant system access",
+            "assign a new employee to department",
+            "step-by-step process for adding a new team member",
+            "add a new user",
+            "add a staff"
+        ]
+        if any(phrase in user_lower for phrase in add_employee_phrases):
+            response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+            return response
         # Check visibility + add_employee combos
         if any(v in user_lower for v in visibility_triggers) and any(a in user_lower for a in add_employee_triggers):
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": permission_response})
@@ -217,7 +226,6 @@ def generate_response(user_input: str, user_role: str) -> str:
                 return assign_response
             chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
             return response
-       
 
     # Detect intent
     intent = detect_intent(user_input)
