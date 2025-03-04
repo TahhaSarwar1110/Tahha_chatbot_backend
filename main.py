@@ -190,10 +190,10 @@ def generate_response(user_input: str, user_role: str) -> str:
         add_employee_phrases = [
             "give system access to an employee",
             "add a new employee",
-            "register",
+            "register a new member",
             "create an employee profile",
             "officially add someone to my team in humanity",
-            "steps to follow to bring a new employee into the system",
+            "steps do i follow to bring a new employee into the system",
             "give system access",
             "correct way to add an employee",
             "input new team members",
