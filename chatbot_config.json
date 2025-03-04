@@ -2,10 +2,22 @@
   "intents": {
     "add_employee": {
       "keywords": [
-      
-        "give system access"
-  
-      ],
+    "give system access to an employee",
+    "add a new employee",
+    "register",
+    "create an employee profile",
+    "officially add someone to my team in Humanity",
+    "steps to follow to bring a new employee into the system",
+    "give system access",
+    "correct way to add an employee",
+    "input new team members",
+    "set up a new employee's account",
+    "specific form or section to add a new hire",
+    "grant system access",
+    "assign a new employee to department",
+    "step-by-step process for adding a new team member",
+    "add a new user",
+    "add a staff"],
       "required": ["employee", "staff", "member", "hire", "user", "someone", "employees", "members", "hires", "users"],
       "threshold": 1,
       "permissions": ["admin", "manager", "supervisor", "scheduler"],
