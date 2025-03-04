@@ -225,8 +225,8 @@ for trigger, response in config.get("special_cases", {}).items():
                 assign_response = f"As a {effective_role or 'user'}, you do not have permission to assign positions. Please contact your scheduler for assistance."
       `         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": assign_response})
                 return assign_response
-            chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
-            return response
+        chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
+        return response
    
        
 
