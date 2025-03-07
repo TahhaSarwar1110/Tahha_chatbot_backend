@@ -204,7 +204,7 @@ def generate_response(user_input: str, user_role: str) -> str:
     
     user_lower = user_input.lower()
     if any(phrase in user_lower for phrase in add_employee_phrases):
-        response = "There are three methods to add an employee:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
+        response = "There are three methods to do so:\n1. Using Employee Button\n2. Using Detailed Form\n3. Import CSV Files\nPlease specify which method you'd like to use."
         chat_memory.save_context(inputs={"input": user_input}, outputs={"output": response})
         return response
     
